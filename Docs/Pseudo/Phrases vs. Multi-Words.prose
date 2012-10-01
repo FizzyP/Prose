@@ -1,0 +1,104 @@
+
+
+Exploration 1 Notes
+
+
+Using "my location" as 2-word word has problems:
+
+1.
+	If you want to be able to dynamically put together "my" and "location" (or "my" and anything else) the reducer needs to be dynamically recomputing the words of the sentence from raw words.
+	a.	This is expensive.  You basically need to start over again after every substitution.
+	b.	This makes the language confusing.
+	c.	This can make things buggy: by substituting something strange you can accidentally cause the sentence to be re-interpreted radically (possibly to have no interpretation.)  Unlike pattern matching, where a single pattern my fail
+
+
+Here is one potential solution:
+
+Ideas
+
+Before, we declare like this
+> word: my location.
+which would serve to declare "my", "location" and the superseding double-word "my location".
+Instead lets say
+
+> idea: my location.
+
+The effect would be:
+> word: my, location.
+> secret word: my-location.
+> phrase: my location 	->	my-location.
+
+Actually we can almost code this in the existing language
+
+> phrase: . idea : word[first] word[second].	->
+	word: first, second;
+	secret word: (first - second);					#	glue together as raw words
+	phrase: first second 	->	first-second.		#	glue together as words
+
+The only thing that wouldn't be supported by the current model is the line:
+
+>	secret word: first-second;
+
+We would need a hyphen operator that takes two words and glues them together.
+
+
+The Hyphen Operator
+
+The expression:
+
+> first - second
+
+is evaluated by taking the two raw words, making a new raw word joinging them with a hyphen and then looking up the word associated with that raw word.  This fails if "first-second" hasn't been defined as a word.
+
+The hyphen is dangerous because it creates a new way for a prose application to "crash".  Example.
+
+> phrase: word[x] and word[y] together	->	x - y.
+describe | peanutbutter and mayonnaise together.
+describe peanutbutter-mayonaise.
+<--- want to say this but it throws a fit because peanutbutter-mayonaise isn't a word.
+
+
+
+Alternately, we could make the hyphen have the property that if either of its parameters is a raw word, then it is a raw word.  Otherwise it is a word, in which case the hyphen "fails" if the hyphenated word was not defined.
+
+This seems like a frustrating behavior.  :-(
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

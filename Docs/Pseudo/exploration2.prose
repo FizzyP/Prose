@@ -1,0 +1,199 @@
+#
+#	prepositions.prose
+#	(c) Fabrizio Polo 8/24/2012
+#
+#	Written before a prose interpreter existed.
+#
+
+#
+#	Trying to figure out () vs [] vs {} and interaction with the keyword "prose" and the phrse: construct.
+#
+
+room: my bedroom
+phrase: here	->	my bedroom
+
+phrase: . describe room[x] .	->	write [description of x].
+
+phrase: . play magic flute .	->	_move from [my location] to (here).
+
+
+#	We want to be able to write sentences like the following:
+phrase: bedroom color	->	red.
+The description of (here) is "Your bedroom is a beautiful bedroom painted [bedroom color].".
+
+#	Note: if the bedroom changes color during gameplay, [bedroom color] would be reevaluated.
+
+#	To do that we need to be able to say things like this:
+
+phrase: . The description of location[x] is prose[y] .	->
+	phrase: description of x -> y.
+
+
+#	Let's try to parse this:
+> The description of (here) is "Your bedroom is a beautiful bedroom painted [bedroom color].".
+| . The description of (here) is " Your bedroom is a beautiful bedroom painted [bedroom color] . " .
+| . The description of my bedroom is " Your bedroom is a beautiful bedroom painted [bedroom color] . " .
+| . phrase: description of my bedroom -> " Your bedroom is a beautiful bedroom painted [bedroom color] . " .
+
+# 	...and this
+> Describe my bedroom.
+| . Describe my bedroom .
+write | [ description of my bedroom ].		#	stop because text doesn't permit [
+write "Your bedroom is a beautiful bedroom painted | [ bedroom color ] . "
+write "Your bedroom is a beautiful bedroom painted red . "
+
+
+
+#	It would be nice to compress it even more
+Room description: "A beautiful bedroom painted [bedroom color].".
+
+#	To implement this
+phrase: . Room description : prose[x] .		->
+	phrase: description of (here)	->	x.
+
+##############################################################################################
+#
+#	Rules for [] and () and the special word "prose".
+#
+
+When one uses the word "prose" on the left side of a 
+
+>phrase: pattern -> prose.
+
+expression, one is not asking for an ordinary word/inheritance based match.  Think of a given phrase as being implemented with a state machine.  It receives new words and returns true or false based on whether the pattern continues to match or not.  The "prose" keyword represents possibly more than one word/symbol.  As long as the phrase "receives" words (that is, objects decendent from "word") it will continue to return true.  It will accept all prose objects except parentheses.
+
+An expression containing parentheses does not count as "prose".  For instance, the interpreter sees something like
+
+>Run to (my previous location).		#	...as...
+>prose ( prose ) .
+
+You're not allowed to match on parentheses though (i.e. they can't occur on the left side of a
+
+>phrase: pattern -> prose.
+
+expression.)  This means that no pattern can match across parentheses.  When a left parenthesis is first encountered, it's matching right parenthesis is found.  The expression inbetween is reduced until it no longer matches any more phrases.  Then, the parentheses are eliminated and pattern matching continues where it left off, beginning with the left most word/object in the reduced expression.
+
+In the previous example we'd have:
+
+>Run to (my previous location).				#	reduces to:
+run to | ( my previous location ) .
+run to home . |
+
+Square brackets are similar to parentheses, except that prose is allowed to contain [].  So, 
+
+>Run to [my previous location].		#	...looks to prose like...
+prose .
+
+Still, you are not allowed to match square brackets using phrases.  So, any phrases which are in the process of being matched are either looking for some word (or descendent) in which case, they must fail, or they are matching "prose" in which case they continue.  When we reach our first [, we cache the state of our pattern matching.  In the case that all "prose" matches eventually fail, we return, evaluate the [] expression just like we do with (), and continue pattern matching from the stored state.  Again, the interpreter sees:
+
+>Run to [my previous location].
+run to | [ my previous location ] .
+run to home . |
+
+The square bracket is like the "lazy parenthses".  This is very important.  Note that the following two lines have totally different meanings:
+
+>phrase: .look. -> describe (my location).
+>phrase: .look. -> describe [my location].
+
+These are both attemptint to implement the shortcut 'look', but they work for very different reasons.  Remember phrase itself has the following pattern
+
+phrase : pattern -> prose.
+
+The last part is supposed to be prose, which doesn't accept parentheses.  This parses as
+
+>phrase: .look. -> describe (my location).
+phrase : . look . -> describe | ( my location ) .
+phrase : . look . -> describe starting room .
+
+This causes the interpreter to evaluate "my location" immediatley.  Of course, you don't want this.  You're int the middle of writing the interactive fiction, you're not playing it!
+
+On the other hand, the second expression fits the pattern
+
+phrase : pattern -> prose.
+
+As a result it stores the correct phrase.  Now let's see what happens when we use the phrase:
+
+>phrase: .look. -> describe [my location].
+>look.
+. look . |
+describe | [ my location ] .		#	fails because  [ isn't allowed to ever match any patterns except "prose"
+describe work . |
+write | [ description of work ] .	#	fails because [ doesn't match "text"
+write "Work is a swell place.".
+
+#
+#	Brackets for phrase pattern match inputs
+#
+
+On the left side of a phrase, the square brackets have a totally different meaning: to name portions of the matching words:
+
+>phrase: . pick up animal[name] .	->		write "The" name "doesn't want to be picked up.".
+
+On the left side, the [] serve to identify "name" with whatever word matched "animal".  So, if you say "pick up cat", in the right side of the phrase expression, the word "name" is automatically replaced with "cat".
+
+>pick up the yellow cat.
+The yellow cat doesn't want to be picked up.
+
+We could accomplish this a different way:
+
+>phrase: pick up animal[name]	->		write ""The (name) doesn't want to be picked up."".
+
+#
+#	text, double quotes, and double double quotes:  ",  ""
+#
+
+Text is like "prose", but slightly more stringent.  "text" cannot contain actions or [].  Text is generally meant to represent something printable to a user.  The usual way to print text to the user is through the following phrase
+
+>phrase: . write text .	->	_Write{text}.
+
+ASIDE:
+	This phrase creates the "write" expression by mapping it to native functionality represented by the secret action _Write (which would be loaded by
+
+	>read file "stdio.prose".
+
+	which loads "stdio_prose.dll" and binds _Write{} to a C# method call with
+
+	>read from dll "stdio_prose.dll":
+	>	secret action: _Write -> "Prose.StdIO.Write".
+
+
+
+The point is, you can only write "text" because that's what "write" matches.  Text is like prose, but can't contain [].  This means...
+
+>phrase: pick up animal[name]	->		write ""The [name] doesn't want to be picked up."".
+>pick up cat.			#	...parses as...
+pick up cat . |
+write "" The | [ name ] doesn't want to be picked up. "" .
+write "" The cat doesn't want to be picked up. "" . |
+
+
+#
+#	Curly Brackets and Double Double Quotes:		{} and ""
+#
+
+Curly brackets are to "prose" as quad quotes are to "text".
+
+Prose surrounded in curly brackets is NOT evaluated (with the exception of parentheticals because they're not really prose).
+Text surrounded in "" "" is NOT evaluated (with the exception of () and [] because they're not really text).
+
+"" has an additional property:  words appearing between "" "" do not need to be defined.
+
+"string literal"
+"" text Literal ""
+{ prose literal }
+
+
+
+Whereas string literals truly protect the text inside, text literals are more flexible.  In particular, when a phrase is applied and substitutions are made for its parameters, those subsittutions occurr inside "" text "" but not "strings".  Example:
+
+phrase: pick up animal[x].	->	write "" The x doesn't want you to do that. ""
+
+The contents of "" text "" really is just prose source code, but only the printable stuff.  The "" text "" block is designed to smooth the transition from word based logic, to word based UI, allowing code elements to render themselves directly.
+
+
+
+
+
+
+
+

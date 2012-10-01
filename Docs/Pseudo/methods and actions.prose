@@ -1,0 +1,70 @@
+
+
+#
+#	The Prose Foreign Function Interface (FFI) allows Prose to call methods from .NET assemblies.
+#
+
+#	Loading an assembly.
+
+load assembly: "myAssembly.dll" <- _MyAssembly.
+
+#	Now _MyAssembly is a new word and
+
+>write [@assembly <- _MyAssembly].
+yes
+
+#	That is, _MyAssembly inherits from @assembly.
+
+# 	The load assembly pattern is:
+
+, load assembly : @string[file_name] <- @raw[assembly_name] ,
+
+#	Bind a type to name
+
+_MyAssembly type: "typeName"	<-	_MyType.
+
+#	Pattern
+
+, @assembly type : @string[type_name]		<-	@raw[prose_type_name] ,
+
+
+#	To bind a method to a word:
+
+_MyType method: "MethodName" <- _ProseMethodName.
+
+#	The pattern for this construction is:
+
+, @type[prose_type_name] method : @string[method_name] <- @raw[prose_method_name] ,
+
+#	The net effects are
+
+#	1.
+@method : _ProseMethodName.			#	The method name descends from the word @method.
+
+#	2.	_ProseMethodName is now bound to an action via the internally defined phrase:
+
+phrase: , _ProseMethodName @prose[args] ,	->
+	An action that can't be coded directly.  It prints as: _ProseMethodName{args}.
+
+#	The pattern used to match method calls is:
+
+, @method[method_name] @prose[args] ,
+
+
+Example:
+
+load assembly: "math_prose.dll"	<-	_MathLib.		#	Load the assembly and give it the name _MathLib.
+_MathLib type: "ProseMath"	<-	_Math.				#	Bind _Math to the ProseMath type in the library.
+_Math method: "evaluate" <- _evaluate.				#	Use _evaluate as the name for an action.
+#	Create a convenient phrase to access this action.  Note that this typechecks the argument!
+#	This way we can be sure that the "evaluate" method will only ever been given a single string.
+phrase:	, caluclate @string[expression] ,	->	, _evaluate{expression} , .
+
+#	Now lets try it
+> evaluate "2 + 5*3".
+"17"
+
+
+
+
+

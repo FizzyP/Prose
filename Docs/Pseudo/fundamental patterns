@@ -1,0 +1,172 @@
+
+
+#
+#	In the future these constructors will be heavily overloaded for convenience.
+#	Here we aim to present a minimal viable language in order to verify that
+#	the behavior I want will be implementable with this pattern matching mechanism,
+#
+
+
+#
+#	Word construction
+#
+
+. word : @raw .
+
+
+#
+#	Inheritance 
+#
+
+. word +: word .
+. word -: word .
+. word <- word .
+
+
+#
+#	Patterns
+#
+
+. word : @pattern :+ @prose .
+. word : @pattern :- @prose .
+. word : @pattern -> @prose .
+
+
+#
+#	Matching prose
+#
+
+When matching "prose", the matcher uses the following rules:
+
+1.	Philosophy: consider the match complete at the first sensible opportunity.
+
+2.	During matching, as more objects are added, the matcher will move on to the word following "prose"
+	in its pattern at the first opportunity.  However, the prose block must be complete with respect to
+	a.	Quadquotes. "" ""
+	b.	Square brackets []
+	c.	Curly brackets []
+
+	For instance, one could embed a period in a curly bracket block and the pattern: "prose ." would
+	still match the entire {curly bracket block}.
+
+3.	Parenthesis cause the matcher to fail. (so they end up being done first.)
+
+4.	A { curly bracket block } will automatically match as the entire prose block if the matcher can
+	successfully match the next part of the pattern (or if the pattern doesn't continue).
+
+5.	If the matcher can't continue to match the pattern after a {curly bracket block} then the
+	matcher treats the {curly bracket block} as properly contained in the prose it's trying to match
+	and continues on adding new objects to "prose" until it can complete the pattern.
+
+
+#
+#	Matching @pattern
+#
+
+pattern matches a list of words (not raw words), each optionally followed by a word in square brackets.
+
+A Pattern:
+
+word[word] word[word] word[word]...
+
+A pattern is terminated by one of the pattern making symbols:  :+  :-  ->
+A period may only appear as the first or last word in a pattern (or both).
+
+In the future we will expand this to support raw words in brackets.
+
+
+#
+#	Matching @text
+#
+
+A text block is wrapped in quadquotes "" "" and may contain words, raw words, pure actions, and must be complete with respect to [].  () and {} are disallowed.
+
+Every piece of a text block must be convertable to a string in some sense.  Pure actions are NOT printed are only allowed for debugging purposes.  The purity requirement ensures that "evaulating text" is side-effect free from the perspective of the language.  A non-pure action showing up in a text block is a programming error and will be detected at runtime.
+
+The language provides the service of automatically "evaluating" text blocks to strings.  First, all square bracket expressions are reduced and the brackets eliminated in the obvious order.  Then, the words/symbols are assembled together according to formatting rules and a string is produced.
+
+
+#
+#	Matching @string
+#
+
+The "@string" keyword in a pattern matches string literals.  It also matches "text".  When matching "text", the text block is implicitly evaluated into a string first.
+
+
+#
+#	Processing of pattern statements
+#
+
+After matching an expression like the following one:
+
+. word[class] : @pattern -> @prose[result] .
+
+this is what happens:
+1.	The pattern is checked for initial/terminal periods.
+2.	If it has a terminal period, then we check the end of "result".
+3.		It should have a period, question mark, or exclamation point.
+4.		If it doesn't, add a period.
+5.	If there is no initial or terminal period:
+6.		make sure there is no . ; ! ? in the result.
+7.	At this point, the pattern/result is considered "valid".
+8.	Scan result for instances of the bracket words in the pattern.
+9.		Replace each such word with the appropriate argref obejct.
+10.	Create a phrase creation action out of the pattern, augmented result, and class.
+11.	Replace the pattern we just matched with the phrase creation action.
+
+
+#
+#	Processing of word creation/inheritance statements
+#
+
+After matching an expression like the following one:
+
+. word[class] : @raw[new] .
+
+this is what happens:
+
+
+#
+#	Performing an action
+#
+
+Whenever you load a dll and map a word to a method, that word automatically inherits from @method.
+To evaluate a method, we pattern match on
+
+. @method[method_name] @prose[arguments] .
+
+
+
+#
+#	Special @ words
+#
+
+Some special words are reserved for use by Prose pattern matching.  To avoid conflicts with words defined in prose source, we preceed these words with an @ sign.  Each @word indicates a special pattern matching behavior (i.e., one different from the standard words/inheritance behavior).
+
+#	@words for matching groups of objects
+@text			#	a text block
+@prose 			#	arbitrary code
+@pattern 		#	a pattern to match
+
+#	@words for matching a single object
+@raw 			#	An uncatalogued word.
+@string 		#	A string literal
+@action 		#	An action object
+@method 		#	The name of a foreign method
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

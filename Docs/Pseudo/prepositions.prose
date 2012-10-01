@@ -1,0 +1,41 @@
+
+#
+#	prepositions.prose
+#	(c) Fabrizio Polo 8/20/2012
+#
+#	Written before a prose interpreter existed.
+#
+
+
+
+
+#
+#	Articles
+#
+
+
+word: article.
+article: the, a, an.
+
+#	New introduction: use () to surround "parameter" names.  This both mimics common usage of
+#	parentheses in English, and doesn't cause any problems: You can't legally match on () anyway
+#	since they're treated as 
+
+phrase: . article(art) noun(super) : word(new) . ->
+	super: new.
+	word: art new.
+	phrase: art new -> new.
+
+# or do I like the old syntax concept better?
+phrase: . article:art noun:super : word:new . ->
+	super: new.
+	word: art new.
+	phrase: art new -> new.
+
+
+#
+#	Prepositions
+#
+
+
+

@@ -1,0 +1,39 @@
+
+
+
+word: cause, event.
+
+
+#
+#	When "Cause event." happens, the given word "is responding".
+#	The point of this is that inheritance filters all calls to
+#	"thing is responding to event with response."  So, one can
+#	define a response, and then later override that response in
+#	a descendent word.
+#
+
+
+phrase:	. word[thing] will respond to event[event] with prose[reaction].	->
+	phrase: response of thing to event	->	reaction.			#	remember the response
+	phrase: . cause event.	:+	thing is responding to event.	#	map the event		
+
+phrase: . word[thing] is responding to event[event].	->
+	response of thing to event.
+
+
+phrase: . word[thing]  
+
+
+#
+#	Second try
+#
+
+word: event responder.
+
+phrase:	. create event: word[e].	->
+	event +: e.
+	event responder: e responder.
+
+phrase: . cause event[e].	->
+	for each e responder[r],
+

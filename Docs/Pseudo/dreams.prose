@@ -1,0 +1,29 @@
+
+#
+#	Any word can be used to create a phrase.  Somehow, priority is determined by
+#	the relations between the words.
+#
+
+phrase <- error.
+word: earlybird.
+earlybird +: phrase.
+
+error: .verb a noun.	->	write "You can't do that silly!".
+
+earlybird: the white house	->	white-house.
+
+#
+#	We've created phrases in two new ways.  First using error, then using earlybird.
+#	Because of the relationship
+#
+#	earlybird : phrase : error
+#
+#	we know that earlybird phrases will be given preference over all others, followed by
+#	phrases followed by errors.
+#
+
+
+
+
+
+

@@ -1,0 +1,12 @@
+
+
+Prose To-Do List
+
+1.	*		Feature		Greedy parsing of words from raw words.
+2.	***		Feature		Pattern matching...
+3.	***		Feature		...with inheritance.
+4.	**		Research	Research history of interactive fiction engines.
+						Why Z-machine?  Who to contact.  Who would be interested?
+5.	***		Research	Finalize decisions on ambiguity resolution.
+6.	***		Research	Work on a strategy for resolving un-matchable source.
+7.  ***		Feature		Prose keyword gets "autoboxing"

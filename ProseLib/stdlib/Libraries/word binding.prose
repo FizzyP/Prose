@@ -1,0 +1,18 @@
+# "word binding.prose" - (c) 2012 Fabrizio Polo
+
+
+# Multiple word statements
+
+word: w.
+word: x.
+word: y.
+word: z.
+
+#	Two words defined at once.
+phrase: ; 	word[w]: @raw[x], @raw[y]; ->
+			w: x; w: y	.
+
+#	More words defined at once.
+phrase: ; 	word[w]: @raw[x], @raw[y], @prose[z]; ->
+			w: x; w: y, z .
+

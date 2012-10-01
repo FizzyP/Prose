@@ -1,0 +1,10 @@
+# stdlib.prose - (c) Fabrizio Polo 2012
+
+read file "Libraries/word binding.prose".
+read file "Libraries/alphabet.prose".
+read file "Libraries/conditionals.prose".
+
+
+
+
+

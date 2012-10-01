@@ -1,0 +1,121 @@
+
+
+#
+#		Logic
+#
+
+word: if, then, otherwise, yes, no, not.
+phrase: not yes		->		no
+phrase: not no 		->		yes
+
+
+#	Imperitive If
+phrase: . if yes then action:X.		->		X.
+phrase: . if no then action.		->		.
+
+#	Functional If
+phrase: if yes then prose:x, otherwise prose	->		x
+phrase: if no then prose, otherwise prose:y		->		y
+
+#
+#	New operators ideas
+#
+#	Create		Equate/Identify		Add a binding      	Remove a bindings
+#	: 			<-					+:					-:
+#
+#	Natural language bindings:
+#	a : b.				Let	b be a.
+#	a <- b.				Let b refer to a.
+#	a +: b.				b is a.  (sam as a:b)
+#	a -: b.				b is no longer directly a.
+#
+#	a : b 				b is a
+#
+
+phrase: word:a is not word:b 	->	not (b : a)
+
+
+
+#
+#	Location
+#
+
+
+word: my location.
+location: home, work.
+home <- my location.		#	Bind using "is"
+
+word: direction.
+direction: north, south, east, west.
+word: from.
+word: nothing.
+
+phrase: north from home		->		work.
+#	By default nothing goes anywhere
+phrase: direction from location 	->	nothing.
+phrase: word from location
+
+#	Going in a direction means looking up "direction from here" and then binding
+#	"my location" to it using inheritance.  <- means throw away all other bindings
+#	and accept this new one.  Effectively, my location now functions as the value
+#	of "x from my location"
+
+secret word: _move.
+
+secret phrase: . _move direction:x.	->
+	x from my location <- my location.
+
+
+
+
+#	The public word "go" maps to the secret word "_move".
+phrase: .go direction:x.		->		if can go x then _move x, otherwise write "You can't go that way."
+
+#	Need to make sense of "can go north"
+word: can.
+phrase: can go direction:x		->		x from my location is not nothing
+
+
+#
+#		Attempt to legally parse "go north"
+#
+
+>go north.
+| . go north.
+. if | can go north then _move north, otherwise write "You can't go that way.".
+. if north from | my location is not nothing then _move north, otherwise write "You can't go that way.".
+. if | north from home is not nothing then _move north, otherwise write "You can't go that way.".
+. if | work is not nothing then _move north, otherwise write "You can't go that way.".
+. if not | (nothing: work) then _move north, otherwise write "You can't go that way.".
+. if | not no then _move north, otherwise write "You can't go that way.".
+| . if yes then _move north, otherwise write "You can't go that way.".
+| . _move noth.
+. north from | my location <- my location.		#	note: my is not a location!
+. | north from home <- my location.
+. work <- my location.
+
+>go south
+| . go south.
+. if | can go south then _move south, otherwise write "You can't go that way.".
+. if south from | my location is not nothing then _move south, otherwise write "You can't go that way.".
+. if | south from home is not nothing then _move south, otherwise write "You can't go that way.".
+. if | nothing is not nothing then _move south, otherwise write "You can't go that way.".
+. if not | (nothing: nothing) then _move south, otherwise write "You can't go that way.".
+. if | not yes then _move south, otherwise write "You can't go that way.".
+| . if no then _move south, otherwise write "You can't go that way.".
+| . write "You can't go that way.".		#	This is atomic
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

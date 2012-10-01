@@ -1,0 +1,58 @@
+
+
+
+Word Comprehensions
+
+
+Want to be able to say
+
+>for each animal[x], do something with x.
+
+How can this be implemented?
+
+Implement general word operators that allow us to traverse the dictionary.
+
+
+
+>next animal after lemur
+lion
+
+It should fit the format:
+
+next word[class] after word[instance]
+
+and should reduce an an instance of "class" which is, in some sense "next".  
+
+
+#	Want to implement this:
+for each animal x starting with lemur, do something with x.
+
+
+phrase: for each word[class] word[variable] starting with word[first], prose[body].	->
+	phrase: perform loop body.	->	body;	#	create a phrase that does the body of the loop
+	if first is class then
+		first <- variable;						
+		perform loop body;						#	do the first iterationg
+		phrase: done iterating		->	variable is not equal to first;
+		try iterating variable over class,
+	otherwise
+		write error "" For each type mismatch: first is not a class. "" .
+
+phrase: try iterating word[x] over word[class] .	->
+	if not done iterating then
+		perform loop body;
+		x <- next class after x;
+		try iterating x over class.
+
+
+#	THIS DESIGN SUCKS:  Nested loops cause don't work!
+
+
+#
+#	Even so  Can we learn something?
+#
+#	Phrases shouldn't be allowed to match ;
+#	A phrase shouldn't be allowed to straddle a ;
+#	Except... that "prose" should accept expressions with semicolons.
+#	This is analogous to how "text" will accept square brackets.
+#

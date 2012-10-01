@@ -1,0 +1,192 @@
+
+phrase: .if yes then prose[x].	->	x.
+phrase: I am in room[x]	->		[x : my location]
+
+#	Isa relationships between punction symbols
+, <- ; <- .
+. <- !			#	When . appears on the left of a pattern only (on the right ? only matches ?)
+. <- ?			#	When . appears on the left of a pattern only (on the right ! only matches !)
+
+#	Uisng these rules, ! and ? can have special meanings at the end of a sentence.  But the
+#	next sentence isn't allowed to care whether the previous sentence ended with a ! ? or .
+
+
+phrase: , open here[x] ,	->	
+
+
+If I am in the kitchen then ring the bell, open the cupboard, and slam the cupboard door.
+If [the kitchen : my location] then ring the bell, open the cupboard, and slam the cupboard door.
+if yes then ring the bell, open the cupboard, and slam the cupboard door.
+ring the bell, open the cupboard, and slam the cupboard door.
+write "Ding.", open the cupboard, and slam the cupboard door.
+_Write{"Ding."}, open the cupboard, and slam the cupboard door.
+_Write{"Ding."}, open cupboord door, and slam the cupboard door.
+_Write{"Ding."}, phrase:cupboord door is open -> yes, and slam the cupboard door.
+
+
+#	Match methods using
+, @method[method_name] @prose[arguments] ,
+
+#	Attempt to solve the list deliniation problem:
+#	Match phrases using any of these (only showing -> operator).
+
+. word[class] : @pattern[p] -> @prose[match] .
+; word[class] : @pattern[p] -> @prose[match] ;
+, word[class] : @pattern[p] -> @prose[match] ,
+
+#	THE PROGRAMMER SHOULD NOT BE ALLOWED TO DISCRIMINATE BETWEEN . AND ;  !!!
+#	The difference: The reader reads at the granularity of sentences.
+
+#	Attempt to solve the list deliniation problem again:
+#	Match phrases using any of these (only showing -> operator).
+
+. word[class] : @pattern[p] -> @prose[match] .
+, word[class] : @pattern[p] -> @prose[match] ,
+
+#	The point: 
+
+#	Now let's go back to the example
+
+_Write{"Ding."}, phrase:cupboord door is open -> yes, and slam the cupboard door.
+
+#	This now matches.  What about this though
+
+. if I am in the kitchen then open the cupboard, and slam the cupboard door.
+. if [the kitchen : my location] then open the cupboard, and slam the cupboard door.
+. if yes then open the cupboard, and slam the cupboard door.
+. open the cupboard, and slam the cupboard door.
+. phrase:cupboord door is open -> yes , and slam the cupboard door.
+
+#	This is a problem...  phrase ends up going with the period pattern which means it interprets
+
+. phrase: cupboord door is open -> {yes , and slam the cupboard door} .
+
+#	...not including the period from the prose block because the pattern didn't include one.
+#	Regardless it's wrong.
+
+#	Solution: But, if you put a , after your then...
+
+. if I am in the kitchen then, open the cupboard, and slam the cupboard door.
+. if [the kitchen : my location] then, open the cupboard, and slam the cupboard door.
+. if yes then, open the cupboard, and slam the cupboard door.
+. , open the cupboard, and slam the cupboard door.
+. , phrase:cupboord door is open -> yes , and slam the cupboard door.
+
+#
+#	What have we learned: A Style rule that makes the logic work out.
+#
+#	1.	When a phrase is supposed to behave as a command (i.e. reduce to an action[s]) you
+#		should provide two versions:
+#
+#		A.		phrase:	. do my thing .	->	_MyAction{} .
+#		B.		phrase:	, do my thing ,	->	, _MyAction{} , .
+#
+#		Interpretation:
+#
+#			In the case of A, you don't need to specify the periods in the expression on the right.
+#		They are automatically added because they appear in the pattern.  The single period represents
+#		the end of the phrase expression.
+#			The point is: When "do my thing" appears surrounded by periods or semicolons in any combination
+#		then you get a match.  Also, you may freely match on commas inside your pattern when it is surrounded
+#		this way.
+#			On the other hand, if you embed "do my thing" in a list of things, it also works because of
+#		pattern B.  This requires a PRECEEDING COMMA though!
+#
+#		Important: why do we need the first rule when the second rule appears to contain it?  Because of
+#		inheritence, the rule involving periods requires a TERMINAL period.  The rule involving commas 
+#		could be matched with ". do my thing ,"
+#
+
+#	To get around this preceeding comma difficulty, maybe we should make a differnet convention:
+#	Phrases expecting lists as arguments are expeted to introduce their own leading comma.
+#	If the "list" contains only one element, the comma should be ignored anyway.
+
+phrase: . if yes then @prose[x] .	->	, x.
+
+#	This allows us to say	(skip the next five reductions if you want).
+
+. if I am in the kitchen then open the cupboard, and slam the cupboard door.
+. if [the kitchen : my location] then open the cupboard, and slam the cupboard door.
+. if yes then open the cupboard, and slam the cupboard door.
+. , open the cupboard, and slam the cupboard door.
+. , phrase:cupboord door is open -> yes , and slam the cupboard door.
+
+
+#	Another useful definition for the NL library.
+
+phrase: , and -> ,.
+
+. , CreatePhrase{phrase: cupboord door is open -> yes}, and slam the cupboard door.
+. , CreatePhrase{phrase: cupboord door is open -> yes}, slam the cupboard door.
+
+
+#	What about ; delimiting?  Is that acceptable?  The discussion above makes it seem like ; is
+#	somehow treated specially.  But, notice how we can successfully use , as a delimiter without
+#	any special language support.  Can we do the same with ; ?
+
+#	Go through each delimeter and discuss behavior.
+
+phrase: , do @prose[todo] ,		->		, todo ,.
+
+#	"todo" quits matching as soon as it hits a , .  Therefore, "todo" can't contain a comma.
+#	Note: , will match against , ; .
+
+phrase: ; do @prose[todo] ;		->		; todo ;.
+
+#	todo may now contain a , but not a ; or .  (unless it's wrapped in {}).
+#	todo may contain a list.
+
+> do first thing, second thing, third thing.
+. do first thing, second thing, third thing .
+
+#	At this point we get two matches:   ".do first thing," matches with the comma pattern. and
+#	". do first thing, second thing, third thing ." matches with the ; pattern.  Due to length,
+#	the correct pattern is chosen.
+
+> do first thing, second thing; do something else.
+. do first thing , second thing ; do something else .
+
+#	Two matches:
+#	. do first thing ,						(matches with , pattern)
+#	. do first thing , second thing ;		(matches with ; pattern)
+
+#	If we add the following pattern, we break the interpretation:
+
+phrase: . do @prose[todo] .		->		. todo . .
+
+#	With this included, we also get the full match with the period pattern.
+
+". do first thing , second thing ; do something else ."	
+
+#	This would evaluate to
+.  first thing , second thing ; do something else .
+
+#	Luckily not a huge problem, but it easily could be if "do" had any real meaning.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

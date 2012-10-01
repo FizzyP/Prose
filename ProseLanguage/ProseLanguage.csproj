@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="3.5" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>9.0.21022</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{8232319A-BC04-42AA-B968-47E6FB34D59C}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <RootNamespace>ProseLanguage</RootNamespace>
+    <AssemblyName>ProseLanguage</AssemblyName>
+    <TargetFrameworkVersion>v3.5</TargetFrameworkVersion>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>False</Optimize>
+    <OutputPath>bin\Debug</OutputPath>
+    <DefineConstants>DEBUG;</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>none</DebugType>
+    <Optimize>True</Optimize>
+    <OutputPath>bin\Release</OutputPath>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <ConsolePause>False</ConsolePause>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AssemblyInfo.cs" />
+    <Compile Include="Prose Core\Structures\Trie.cs" />
+    <Compile Include="Prose Core\Exceptions\ProseValidationException.cs" />
+    <Compile Include="Prose Core\Exceptions\ProseFailure.cs" />
+    <Compile Include="Prose Core\Exceptions\ProseWordParserFailure.cs" />
+    <Compile Include="Prose Core\Exceptions\WordNotFoundException.cs" />
+    <Compile Include="Prose Core\Phrases\SimplePhrase.cs" />
+    <Compile Include="Prose Core\Structures\PNode.cs" />
+    <Compile Include="Prose Core\Structures\WordTrie.cs" />
+    <Compile Include="Prose Core\Lexer\ProseLexer.cs" />
+    <Compile Include="Prose Core\Lexer\LexerToken.cs" />
+    <Compile Include="Prose Core\Runtime\RuntimeLexer.cs" />
+    <Compile Include="Prose Core\Runtime\ProseRuntime.cs" />
+    <Compile Include="Prose Core\Runtime\ProseScope.cs" />
+    <Compile Include="Prose Core\Debugger\PNodeDebugData.cs" />
+    <Compile Include="Prose Core\Runtime\ProseClient.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\WriteAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\WordBindingAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\PhraseCreationAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\StringLiteralObject.cs" />
+    <Compile Include="Prose Core\ProseObjects\ProseObjectBase.cs" />
+    <Compile Include="Prose Core\ProseObjects\RawWordObject.cs" />
+    <Compile Include="Prose Core\ProseObjects\ArgRefObject.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\ProseAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\Word.cs" />
+    <Compile Include="Prose Core\ProseObjects\ProseObject.cs" />
+    <Compile Include="Prose Core\Phrases\Phrase.cs" />
+    <Compile Include="Prose Core\Language\ProseLanguage.cs" />
+    <Compile Include="Prose Core\Language\RawWord.cs" />
+    <Compile Include="Prose Core\ProseObjects\ProseBlockObject.cs" />
+    <Compile Include="Prose Core\ProseObjects\MethodObject.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\MethodDelegateAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\MethodNameWord.cs" />
+    <Compile Include="Prose Core\Runtime\Matching\PatternMatcher.cs" />
+    <Compile Include="Prose Core\Runtime\Matching\PatternMatcherException.cs" />
+    <Compile Include="Prose Core\Lexer\Exceptions\LexerFailure.cs" />
+    <Compile Include="Prose Core\Lexer\Exceptions\LexerSourceException.cs" />
+    <Compile Include="Prose Core\Runtime\Exceptions\RuntimeLexerFailure.cs" />
+    <Compile Include="Prose Core\Runtime\Exceptions\RuntimeLexerSourceException.cs" />
+    <Compile Include="Prose Core\Runtime\Exceptions\RuntimeProseLanguageException.cs" />
+    <Compile Include="Prose Core\Runtime\Exceptions\RuntimeProseLanguageFragmentException.cs" />
+    <Compile Include="Prose Core\ProseObjects\PatternObject.cs" />
+    <Compile Include="Prose Core\Runtime\Exceptions\RuntimeFailure.cs" />
+    <Compile Include="Prose Core\Phrases\WordBindingPhrase.cs" />
+    <Compile Include="Prose Core\Phrases\ExclusiveWordBindingPhrase.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\ExclusiveWordBindingAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\DebugOutputAction.cs" />
+    <Compile Include="Prose Core\Phrases\DebugOutputPhrase.cs" />
+    <Compile Include="Prose Core\Phrases\ExclusivePhraseBindingPhrase.cs" />
+    <Compile Include="Prose Core\Phrases\AssemblyPhrase.cs" />
+    <Compile Include="Prose Core\ProseObjects\AssemblyWord.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\LoadAssemblyAction.cs" />
+    <Compile Include="Prose Core\Phrases\ContentsOfTextFilePhrase.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\ReadAction.cs" />
+    <Compile Include="Prose Core\Phrases\ReadPhrase.cs" />
+  </ItemGroup>
+  <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+</Project>

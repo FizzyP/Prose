@@ -1,0 +1,25 @@
+#	conditionals.prose	-	(c) 2012 Fabrizio Polo
+
+
+word: boolean.
+boolean: yes, no.
+
+word: if, then.
+word: else, otherwise.
+phrase:	else	->	otherwise.
+
+#	Imperitive comma delimited.
+
+phrase: , if no then @prose, 		-> 	,.
+phrase: , if yes then @prose[x],	-> 	x.
+
+#	Imperitive semicolon delimited.
+
+phrase: ; if no then @prose; 		-> 	,.
+phrase: ; if yes then @prose[x]; 	-> 	x.
+
+#	Imperitive with otherwise
+
+phrase: , if no then @prose, otherwise @prose[y],		->	y.
+phrase: , if yes then @prose[x], otherwise @prose,		->	x.
+
