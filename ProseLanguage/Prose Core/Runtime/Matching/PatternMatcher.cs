@@ -609,7 +609,13 @@ namespace ProseLanguage
 						babyMatchers.Add(babyMatcher);
 					}
 				}
-				else {
+				else if (	obj == runtime.Period
+				         ||	!(obj is Word))
+				{
+					return babyMatchers;
+				}
+				else
+				{
 					PatternMatcher babyMatcher = makeCopyWithStateFromAtWord(runtime.@pattern);
 					babyMatcher.while_MATCHING_PATTERN_extendWith(node, currNode);	//	Use same node
 					if (babyMatcher.IsntFailed)
