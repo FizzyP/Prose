@@ -1,8 +1,11 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Prose/Main/Main.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="ProseLanguage/Prose Core/Phrases/AssemblyPhrase.cs">
     <Files>
-      <File FileName="Prose/Main/Main.cs" Line="155" Column="4" />
+      <File FileName="Prose/Main/Main.cs" Line="184" Column="3" />
+      <File FileName="ProseLanguage/Prose Core/Runtime/ProseRuntime.cs" Line="398" Column="24" />
+      <File FileName="ProseLanguage/Prose Core/ProseObjects/AssemblyWord.cs" Line="1" Column="1" />
+      <File FileName="ProseLanguage/Prose Core/Phrases/AssemblyPhrase.cs" Line="25" Column="29" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

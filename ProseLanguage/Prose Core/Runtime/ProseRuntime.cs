@@ -24,6 +24,9 @@ namespace ProseLanguage
 		public ProseClient GlobalClient {	get {	return global_client;	}	}
 
 
+		public delegate void OnProgressReportDelegate(ProseRuntime runtime, PNode source, PNode progressMark);
+		public event OnProgressReportDelegate OnProgressReport;
+
 
 		#region Constant Words/Symbols/Actions
 
@@ -388,7 +391,8 @@ namespace ProseLanguage
 
 				//	Try to reduce starting at the progressMark
 				PNode beginningOfFragment = source.prev.next;
-				Console.WriteLine("- " + beginningOfFragment.getReadableStringWithProgressMark(progressMark));
+				if (OnProgressReport != null)
+					OnProgressReport(this, beginningOfFragment, progressMark);
 				bool didReduceAtMark;
 				PNode reducedAtMark = reduceSentenceFragmentStartingAtBeginning(progressMark, out didReduceAtMark);
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
