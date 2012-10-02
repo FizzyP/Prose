@@ -1,33 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="ProseLanguage/Prose Core/Runtime/Matching/PatternMatcher.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Prose/Main/Main.cs">
     <Files>
-      <File FileName="ProseLib/AssemblyInfo.cs" Line="13" Column="18" />
-      <File FileName="ProseLib/Lib/ProseIO.cs" Line="12" Column="1" />
-      <File FileName="Prose/AssemblyInfo.cs" Line="1" Column="1" />
-      <File FileName="Prose/Main/Main.cs" Line="32" Column="3" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/ExclusiveWordBindingPhrase.cs" Line="57" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Language/ProseLanguage.cs" Line="237" Column="33" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/AssemblyPhrase.cs" Line="36" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/ContentsOfTextFilePhrase.cs" Line="18" Column="40" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/ExclusivePhraseBindingPhrase.cs" Line="69" Column="18" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/DebugOutputPhrase.cs" Line="18" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/StringLiteralObject.cs" Line="25" Column="5" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/SimplePhrase.cs" Line="71" Column="20" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/Phrase.cs" Line="23" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/ProseObject.cs" Line="1" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Lexer/ProseLexer.cs" Line="135" Column="4" />
-      <File FileName="ProseLanguage/Prose Core/Runtime/ProseRuntime.cs" Line="387" Column="53" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/ReadAction.cs" Line="23" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/ProseAction.cs" Line="12" Column="3" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/DebugOutputAction.cs" Line="1" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/ReadPhrase.cs" Line="24" Column="9" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/PhraseCreationAction.cs" Line="10" Column="30" />
-      <File FileName="ProseLanguage/Prose Core/Phrases/WordBindingPhrase.cs" Line="56" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/WordBindingAction.cs" Line="1" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Runtime/Matching/PatternMatcher.cs" Line="11" Column="38" />
-      <File FileName="ProseLanguage/Prose Core/Structures/PNode.cs" Line="71" Column="1" />
-      <File FileName="ProseLanguage/Prose Core/Structures/Trie.cs" Line="151" Column="1" />
+      <File FileName="Prose/Main/Main.cs" Line="155" Column="4" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

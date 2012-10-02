@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using ProseLanguage;
+using System.Runtime.InteropServices;
 
 namespace Prose
 {
@@ -10,6 +11,8 @@ namespace Prose
 
 		public static void Main (string[] args)
 		{
+			initializeConsole();
+
 			howdy();
 
 			// testPreParser();
@@ -81,7 +84,7 @@ namespace Prose
 		{
 			ProseLexer lexer = new ProseLexer();
 			while (true) {
-				Console.Write("\n> ");
+				//printPrompt();
 				string instring = Console.ReadLine();
 				if (instring == "exit.")
 					break;
@@ -104,8 +107,10 @@ namespace Prose
 		{
 			ProseRuntime runtime = new ProseRuntime();
 			while (true) {
-				Console.Write("\n> ");
+				printPrompt();
 				string instring = Console.ReadLine();
+				restoreConsoleColor();
+
 				if (instring == "exit.")
 					break;
 				if (instring == "new.") {
@@ -119,12 +124,12 @@ namespace Prose
 					runtime.read(instring, runtime.GlobalClient);
 				}
 				catch (RuntimeProseLanguageException e) {
-					Console.WriteLine("RuntimeProseLanguageException: " + e.Report);
+					reportException("\r\nRuntimeProseLanguageException: " + e.Report);
 				}
 
 				catch (LexerSourceException e)
 				{
-					Console.WriteLine("Lexer Source Exception: " + e.Report);
+					reportException("\r\nLexer Source Exception: " + e.Report);
 				}
 //				catch (RuntimeLexerSourceException e)
 //				{
@@ -136,6 +141,32 @@ namespace Prose
 		}
 
 
+		static void initializeConsole()
+		{
+			restoreConsoleColor();
+			Console.Clear();
+		}
+
+		static void restoreConsoleColor()
+		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Gray;
+		}
+
+		static void reportException(string s)
+		{
+			Console.ForegroundColor = ConsoleColor.Black;
+			Console.BackgroundColor = ConsoleColor.Yellow;
+			Console.WriteLine(s);
+			restoreConsoleColor();
+		}
+
+		static void printPrompt()
+		{
+			Console.ForegroundColor = ConsoleColor.Cyan;
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.Write("\r\n> ");
+		}
 
 	}
 }
