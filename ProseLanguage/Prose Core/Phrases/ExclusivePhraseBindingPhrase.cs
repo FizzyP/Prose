@@ -30,7 +30,7 @@ namespace ProseLanguage
 			//	Extract the pattern from the match
 			ProseObject[] pattern = match.CurrPatternObject.Pattern;
 			//	Create a value[] array for the new phrase
-			ProseObject[] pvalue = match.getArgumentAsProseAtIndex(5);
+			ProseObject[] pvalue = match.getArgumentAsProseAtIndex(5).ToArray();
 			//	Go through and make substitutions for the arguments
 			PatternObject po = match.CurrPatternObject;
 			for(int i=0; i < po.Length; i++) {

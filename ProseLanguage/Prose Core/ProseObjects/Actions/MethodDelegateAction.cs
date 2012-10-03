@@ -15,6 +15,7 @@ namespace ProseLanguage
 		{
 			this.methodName = methodName;
 			this.args = args;
+			this.method = methodName.DelegateMethod;
 		}
 
 		public bool IsPure {	get {	return isPure;	}	}
@@ -25,7 +26,7 @@ namespace ProseLanguage
 
 		public void performAction(ProseRuntime runtime)
 		{
-
+			method(runtime, args);
 		}
 
 	}

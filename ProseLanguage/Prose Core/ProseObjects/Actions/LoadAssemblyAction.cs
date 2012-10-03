@@ -3,10 +3,12 @@ using System.Reflection;
 
 namespace ProseLanguage
 {
-	public class LoadAssemblyAction : ProseObjectBase, ProseObject
+	public class LoadAssemblyAction : ProseObjectBase, ProseObject, ProseAction
 	{
 		string dllName;
 		RawWordObject rawWordObj;
+
+		public bool IsPure {	get {	return false;	}	}
 
 		public LoadAssemblyAction (string assemblyFileName, RawWordObject rawWordObj)
 		{
@@ -19,7 +21,7 @@ namespace ProseLanguage
 			//	Load the dll
 			Assembly assembly = Assembly.LoadFrom(dllName);
 			//	Build an assembly word from it
-			AssemblyWord asmName = new AssemblyWord(rawWordObj.RawWords, runtime, assembly);
+			AssemblyNameWord asmName = new AssemblyNameWord(rawWordObj.RawWords, runtime, assembly);
 			runtime.addWord(asmName);
 		}
 

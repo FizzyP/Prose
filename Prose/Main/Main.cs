@@ -106,7 +106,12 @@ namespace Prose
 		static ProseRuntime initNewRuntime()
 		{
 			ProseRuntime runtime = new ProseRuntime();
-			runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+			//runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
+			//runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
+			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
+			//runtime.AfterPerformingAction += new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
+
 			initializeConsole();
 			return runtime;
 		}
@@ -195,20 +200,28 @@ namespace Prose
 		static void onProgressReport(ProseRuntime runtime, PNode beginningOfFragment, PNode progressMark)
 		{
 			//debugOutput("- " + beginningOfFragment.getReadableStringWithProgressMark(progressMark));
-			writePrettyProseWithProgressMark(runtime, beginningOfFragment, progressMark);
+			writePrettyProseWithProgressMark(runtime, beginningOfFragment, progressMark, 0);
 		}
 
 		//	Pass null to progress mark to eliminate
-		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark)
+		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark, int maxNodesToProcess)
 		{
-
+			//Stack<ProseObject> parenStack = new Stack<ProseObject>();
+			int parenCount = 0;
+			int quadQuoteCount = 0;
+			int periodCount = 0;
+			int nodesProcessed = 0;
 
 			PNode p = start;
 			do {
+				nodesProcessed++;
 				if (p.value == null) {
 					p = p.next;
 					continue;
 				}
+
+				p = runtime.filterIncomingPNode(p);
+
 				//	PROGRESS MARK
 				if (p == progressMark) {
 					Console.BackgroundColor = ConsoleColor.Black;
@@ -235,18 +248,84 @@ namespace Prose
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.ForegroundColor = ConsoleColor.Red;
 				}
+//				else if (	p.value == runtime.LefetParenthesis
+//				         ||	p.value == runtime.LeftSquareBracket
+//				         ||	p.value == runtime.LeftCurlyBracket
+//				         || p.value == runtime.RightParenthesis
+//				         || p.value == r
+				else if (	p.value == runtime.Colon
+				         ||	p.value == runtime.LeftArrow
+				         || p.value == runtime.PlusColon
+				         || p.value == runtime.MinusColon
+				         || p.value == runtime.RightArrow
+				         || p.value == runtime.ColonPlus
+				         || p.value == runtime.ColonMinus)
+				{
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.ForegroundColor = ConsoleColor.Cyan;
+				}
+				else if (	p.value is AssemblyNameWord
+				         ||	p.value is TypeNameWord
+				         ||	p.value is MethodNameWord)
+				{
+					Console.BackgroundColor = ConsoleColor.Black;
+					Console.ForegroundColor = ConsoleColor.Yellow;
+				}
 				else
 				{
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.ForegroundColor = ConsoleColor.Gray;
 				}
 
+
+				//	Write the output
+
+
+				Console.Write(" ");
+
 				Console.Write(p.value.getReadableString());
 //				outStr.Append(p.value.getReadableString());
 
+				//	Just so nothing too ugly can go wrong
 				Console.BackgroundColor = ConsoleColor.Black;
-				Console.Write(" ");
 
+
+				//
+				//	Other exits
+				//
+				if (nodesProcessed == maxNodesToProcess)
+					break;
+
+				//
+				//	Keep track of parentheticals to know if we can quit
+				//
+				if (	p.value == runtime.LefetParenthesis
+				    ||	p.value == runtime.LeftCurlyBracket
+				    ||	p.value == runtime.LeftSquareBracket)
+				{
+					parenCount++;
+					//parenStack.Push(p.value);
+				}
+				else if (	p.value == runtime.RightParenthesis
+				         || p.value == runtime.RightCurlyBracket
+				         ||	p.value == runtime.RightSquareBracket)
+				{
+					parenCount--;
+				}
+				else if (p.value == runtime.Quadquote) {
+					quadQuoteCount++;
+				}
+				else if (	p.value == runtime.Period
+				         && parenCount == 0
+				         &&	quadQuoteCount % 2 == 0)
+				{
+					periodCount++;
+					//	If parens and quadquotes are done and we have period then bail
+					if (periodCount == 2)
+						break;
+				}
+
+				//	Update
 				p = p.next;
 			} while (p != null);
 			//outStr.Remove(outStr.Length - 1, 1);
@@ -255,5 +334,24 @@ namespace Prose
 			Console.WriteLine();
 
 		}
+
+		static void onAmbiguity(ProseRuntime runtime, PNode source, List<PatternMatcher> matches)
+		{
+		}
+
+		static void onParseSentence(ProseRuntime runtime, PNode source)
+		{
+			writePrettyProseWithProgressMark(runtime, source, null, 0);
+		}
+
+		static void beforePerformingAction(ProseRuntime runtime, PNode source)
+		{
+		}
+
+		static void afterPerformingAction(ProseRuntime runtime, PNode source)
+		{
+			writePrettyProseWithProgressMark(runtime, source, null, 1);
+		}
+
 	}
 }

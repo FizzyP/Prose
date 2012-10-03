@@ -3,37 +3,40 @@ using System.Collections.Generic;
 
 namespace ProseLanguage
 {
+
+
 	//
 	//	Designed to match:
 	//
-	//	, load assembly : @string[file_name] <- @raw[new_assembly_word] ,
+	//	, @method[method_name] @prose[args] ,
 	//
-
-	public class AssemblyPhrase : SimplePhrase
+	
+	public class ApplyMethodPhrase : SimplePhrase
 	{
-		public AssemblyPhrase(ProseObject phraseClass, ProseObject[] phrasePattern)
+		public ApplyMethodPhrase(ProseObject phraseClass, ProseObject[] phrasePattern)
 			: base(phraseClass, phrasePattern)
 		{
 		}
-
+		
 		public override PNode evaluate(PNode evaluateMe, PatternMatcher successfulMatch)
 		{
 			PatternMatcher match = successfulMatch;
-
+			
 			//	Extract the "arguments" from the PatternMatcher.
 			List<PNode> M = match.Matching;			//	The pattern -> prose index from the match
-			string dllFileName = ((StringLiteralObject) M[4].value).literal;
-			RawWordObject newAssemblyWord = (RawWordObject) M[6].value;
-			LoadAssemblyAction action = new LoadAssemblyAction(dllFileName, newAssemblyWord);
+
+			MethodNameWord methodWord = (MethodNameWord) M[1].value;
+			List<ProseObject> args =successfulMatch.getArgumentAsProseAtIndex(2);
+			ProseAction action = new MethodDelegateAction(methodWord, args);
 
 			value = new ProseObject[3];
 			value[0] = M[0].value;
 			value[1] = action;
-			value[2] = M[6].value;
+			value[2] = M[3].value;
 			
 			return replaceWithValueAt(evaluateMe, successfulMatch);
 		}
-
+		
 	}
 }
 

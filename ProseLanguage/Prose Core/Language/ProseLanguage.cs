@@ -142,6 +142,7 @@ namespace ProseLanguage
 
 			wordList.Add(new string[]{"@assembly"});
 			wordList.Add(new string[]{"@type"});
+			wordList.Add(new string[]{"@method"});
 
 
 			//	IO (minimal necessary to load libraries)
@@ -252,16 +253,46 @@ namespace ProseLanguage
 
 			#region Foreign Function Interface
 
+			//	Load an assembly and bind it to a name
 			// 	, load assembly : @string[file_name] <- @raw[new_assembly_word] ,
 			{
 				ProseObject[] p = new ProseObject[]
 				{runtime.Comma, runtime.word("load"), runtime.word("assembly"), runtime.Colon,
 					runtime.@string, runtime.LeftArrow, runtime.@raw, runtime.Comma};
-				AssemblyPhrase asmPhrase = new AssemblyPhrase(runtime.Word_phrase, p);
+				BindAssemblyPhrase asmPhrase = new BindAssemblyPhrase(runtime.Word_phrase, p);
 				scope.addPhrase(asmPhrase);
 			}
 
-			#endregion
+			//	Load a type and bind it to a name
+			// 	, @assembly[asm_name] type : @string[type_name] <- @raw[new_type_word] ,
+			{
+				ProseObject[] p = new ProseObject[]
+				{runtime.Comma, runtime.word("@assembly"), runtime.word("type"), runtime.Colon,
+					runtime.@string, runtime.LeftArrow, runtime.@raw, runtime.Comma};
+				BindTypePhrase typePhrase = new BindTypePhrase(runtime.Word_phrase, p);
+				scope.addPhrase(typePhrase);
+			}
+
+			//	Load a method and bind it to a name
+			// 	, @type[type_name] method : @string[method_name] <- @raw[new_method_word] ,
+			{
+				ProseObject[] p = new ProseObject[]
+				{runtime.Comma, runtime.word("@type"), runtime.word("method"), runtime.Colon,
+					runtime.@string, runtime.LeftArrow, runtime.@raw, runtime.Comma};
+				BindMethodPhrase methodPhrase = new BindMethodPhrase(runtime.Word_phrase, p);
+				scope.addPhrase(methodPhrase);
+			}
+
+			//	Apply a method to some arguments to produce an action
+			//	, @method[method_name] @prose[args] ,
+			{
+				ProseObject[] p = new ProseObject[]
+				{runtime.Comma, runtime.word("@method"), runtime.@prose, runtime.Comma};
+				Phrase applyMethodPhrase = new ApplyMethodPhrase(runtime.Word_phrase, p);
+				scope.addPhrase(applyMethodPhrase);
+			}
+
+#endregion
 
 
 			#region Experimental

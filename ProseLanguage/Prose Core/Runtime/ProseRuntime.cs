@@ -24,9 +24,24 @@ namespace ProseLanguage
 		public ProseClient GlobalClient {	get {	return global_client;	}	}
 
 
+		#region Callbacks and Events
+
 		public delegate void OnProgressReportDelegate(ProseRuntime runtime, PNode source, PNode progressMark);
 		public event OnProgressReportDelegate OnProgressReport;
 
+		public delegate void OnAmbiguityDelegate(ProseRuntime runtime, PNode source, List<PatternMatcher> matches);
+		public event OnAmbiguityDelegate OnAmbiguity;
+
+		public delegate void OnParseSentenceDelegate(ProseRuntime runtime, PNode source);
+		public event OnParseSentenceDelegate OnParseSentence;
+
+		public delegate void BeforePerformingActionDelegate(ProseRuntime runtime, PNode source);
+		public event BeforePerformingActionDelegate BeforePerformingAction;
+
+		public delegate void AfterPerformingActionDelegate(ProseRuntime runtime, PNode source);
+		public event AfterPerformingActionDelegate AfterPerformingAction;
+
+		#endregion
 
 		#region Constant Words/Symbols/Actions
 
@@ -263,6 +278,12 @@ namespace ProseLanguage
 //			if (sourcePtr.value == Period)
 //				return sourcePtr.next;
 
+
+			if (OnParseSentence != null)
+				OnParseSentence(this, sourcePtr.prev);
+
+
+
 			//	Reduce the sentence.
 			bool didReduce;
 			PNode reducedSource = reduceSentence(sourcePtr, out didReduce);
@@ -321,8 +342,18 @@ namespace ProseLanguage
 			while (reduced != null)
 			{
 				if (reduced.value is ProseAction) {
+
+					//	Callback Before
+					if (BeforePerformingAction != null)
+						BeforePerformingAction(this, reduced);
+
 					//	DO THE ACTION!
 					((ProseAction) reduced.value).performAction(this);
+
+					//	Callback After
+					if (AfterPerformingAction != null)
+						AfterPerformingAction(this, reduced);
+
 					didSomeActions = true;
 					reduced.removeSelf();
 
@@ -393,6 +424,7 @@ namespace ProseLanguage
 				PNode beginningOfFragment = source.prev.next;
 				if (OnProgressReport != null)
 					OnProgressReport(this, beginningOfFragment, progressMark);
+
 				bool didReduceAtMark;
 				PNode reducedAtMark = reduceSentenceFragmentStartingAtBeginning(progressMark, out didReduceAtMark);
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
@@ -449,7 +481,11 @@ namespace ProseLanguage
 			    bestMatches.Count == 1 && bestMatches[0].MatchedPhrases.Count > 1)
 			{
 				didReduce = false;
-				throw new RuntimeProseLanguageException("Sentence is ambiguous.", source);
+
+				if (OnAmbiguity != null)
+					OnAmbiguity(this, source, bestMatches);
+				else
+					throw new RuntimeProseLanguageException("Sentence is ambiguous.", source);
 			}
 			else if (bestMatches.Count == 0) {
 				//	We couldn't reduce anything
@@ -493,12 +529,16 @@ namespace ProseLanguage
 						if (babyMatcher.IsMatched)
 						{
 							successfullMatches.Add(babyMatcher);
-//							//	Rest the matcher so it can be can be continued
+							babyMatchers.Add(babyMatcher);
+							//							//	Rest the matcher so it can be can be continued
 //							babyMatcher.IsMatched = false;
 						}
+						else
+						{
 						//	Regardless, throw it back in the pot to see if it can be extended
 						//if (babyMatcher.IsntFailed)
 							babyMatchers.Add(babyMatcher);
+						}
 					}
 
 
@@ -514,7 +554,7 @@ namespace ProseLanguage
 		}
 
 		//	Possibly translate some incoming nodes
-		private PNode filterIncomingPNode(PNode node)
+		public PNode filterIncomingPNode(PNode node)
 		{
 			//	Raw nodes get free upgrades to words if the word is defined.
 			if (node.value is RawWordObject)

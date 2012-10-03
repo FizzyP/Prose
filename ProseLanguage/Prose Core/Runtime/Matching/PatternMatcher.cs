@@ -236,6 +236,13 @@ namespace ProseLanguage
 		List<PatternMatcher> while_MATCHING_OBJECT_matchNextObject(PNode node)
 		{
 			ProseObject obj = node.value;
+			//	Some symbols get special treatment at the beginning or end of 
+			if (	obj == runtime.Period
+			    ||	obj == runtime.Semicolon
+			    &&	currNode == patternTrie.Root)
+			{
+				
+			}
 
 			//	Get a list of words which, if they appeared in a pattern, would match with this one.
 			List<ProseObject> matchingPatternWords = getMatchingPatternWords(obj);
@@ -253,6 +260,9 @@ namespace ProseLanguage
 			foreach(ProseObject objMatch in matchingPatternWords)
 			{
 				ProseObject match = objMatch;
+
+
+
 				//Word match = (Word) objMatch;
 				//	Look up the node that would correspond to the pattern word that would match.
 				Trie<ProseObject, List<Phrase>>.Node matchNode = currNode.getChildNode(match);
@@ -457,7 +467,10 @@ namespace ProseLanguage
 				//	Look these words up to see if actual patterns exist.
 				foreach(ProseObject match in matchingPatternWords)
 				{
-					if (obj != runtime.Period)
+					//	If it's not a period and the attempt to extend @prose immediately failed,
+					//	then we continue matching @prose.  If the attempt didn't immediately fail then
+					//	the rules say we must leave @prose.
+					if (obj != runtime.Period) // && !babyMatcher.IsntFailed)
 						canExtendThisProseBlock = true;
 
 					if (match == runtime.@prose) continue;	//	back to back @prose outlawed.
@@ -473,6 +486,9 @@ namespace ProseLanguage
 					babyMatcher.switchToState_MATCHING_OBJECT();						//	Move babyMatcher into the generic state (can accept anything)
 					babyMatcher.while_MATCHING_OBJECT_extendWith(node, matchNode);		//	Append the new node
 					babyMatchers.Add(babyMatcher);										//	Eventually return this baby matcher
+				
+
+
 				}
 			}
 
@@ -710,7 +726,7 @@ namespace ProseLanguage
 
 		#region Argument Extraction
 
-		public ProseObject[] getArgumentAsProseAtIndex(int idx)
+		public List<ProseObject> getArgumentAsProseAtIndex(int idx)
 		{
 			//	Start at the given index
 			PNode start = patternComponentNodes[idx];
@@ -733,7 +749,7 @@ namespace ProseLanguage
 				p = p.next;
 			}
 
-			return proseOut.ToArray();
+			return proseOut;
 		}
 
 		public PNode getArgumentBounds(int idx, out PNode terminator)
