@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace ProseLanguage
 {
@@ -15,8 +16,11 @@ namespace ProseLanguage
 		public bool IsPure {	get {	return false;	}	}
 
 		public string getReadableString() {
-			return "XBindPhrase{}";
+
+			return "XBindPhrase{" + phrase.getReadableString() + "}";
 		}
+
+
 
 		public void performAction(ProseRuntime runtime)
 		{

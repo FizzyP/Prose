@@ -2,12 +2,29 @@ using System;
 using System.Collections.Generic;
 using ProseLanguage;
 using System.Runtime.InteropServices;
+using System.Linq;
 
 namespace Prose
 {
-	class MainClass
+	public class ProseREPL
 	{
+		private static ProseRuntime runtime;
+		public static ProseRuntime Runtime {
+			get {	return runtime; }
+			set { 	runtime = value; }
+		}
 
+
+		private static ProseRuntime.OnAmbiguityDelegate onAmbiguityDelegate = new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
+
+		private static ProseRuntime.OnProgressReportDelegate onProgressReportDelegate = new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+		private static bool showProgressReport = false;
+		private static ProseRuntime.OnParseSentenceDelegate onParseSentenceDelegate = new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
+		private static bool showParseSentenceReport = false;
+		private static ProseRuntime.BeforePerformingActionDelegate beforePerformingActionDelegate = new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
+		private static bool showBeforeActionReport = false;
+		private static ProseRuntime.AfterPerformingActionDelegate afterPerformingActionDelegate = new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
+		private static bool showAfterActionReport = false;
 
 		public static void Main (string[] args)
 		{
@@ -20,7 +37,7 @@ namespace Prose
 
 			//testLexer();
 
-			testRuntimeLexer();
+			enterProseREPL();
 
 			seeYaLater();
 		}
@@ -33,17 +50,6 @@ namespace Prose
 			Console.WriteLine("");
 		}
 
-		public static string getLineFromPrompt()
-		{
-			writePrompt();
-			return Console.ReadLine();
-		}
-
-		public static void writePrompt()
-		{
-			Console.Write("prose: ");
-		}
-
 		public static void seeYaLater()
 		{
 			Console.WriteLine("------------------------------------------");
@@ -54,81 +60,30 @@ namespace Prose
 
 
 
-//		public static void testPreParser()
-//		{
-//			string source = getLineFromPrompt();
-//			ProseSourcePreParser preParser = new ProseSourcePreParser();
-//			RawWord[] rawWords = preParser.parseSourceIntoRawWords(source);
-//			foreach(RawWord rawWord in rawWords)
-//			{
-//				Console.WriteLine(rawWord.AsString);
-//			}
-//		}
-//
-//
-//		public static void testRuntimeWordParser()
-//		{
-//			ProseRuntime runtime = new ProseRuntime();
-//			try {
-//				runtime.read(getLineFromPrompt());
-//			}
-//			catch (WordNotFoundException e)
-//			{
-//				Console.WriteLine("I don't know the word \"" + e.RawWords[0].AsString + "\"");
-//			}
-//		}
-
-
-
-		public static void testLexer()
+		public static void initNewREPLRuntime()
 		{
-			ProseLexer lexer = new ProseLexer();
-			while (true) {
-				//printPrompt();
-				string instring = Console.ReadLine();
-				if (instring == "exit.")
-					break;
-				try {
-					List<LexerToken> tokenized = lexer.parseStringIntoTokens(instring);
-					foreach (LexerToken token in tokenized)
-						Console.WriteLine(token.rawWord.AsString);
-				}
-				catch (LexerSourceException e)
-				{
-					Console.WriteLine(e.Message);
-				}
-			}
-		}
-
-
-
-		static ProseRuntime initNewREPLRuntime()
-		{
-			ProseRuntime runtime = initNewCleanRuntime ();
-			runtime.read("read file \"Libraries/REPL/REPL.prose\"", runtime.GlobalClient);
+			initNewCleanRuntime ();
 			initializeConsole();
-			return runtime;
+			tryRead("read file \"Libraries/REPL/REPL.prose\"");
 		}
 
 
-		static ProseRuntime initNewCleanRuntime()
+		public static void initNewCleanRuntime()
 		{
-			ProseRuntime runtime = new ProseRuntime();
+			runtime = new ProseRuntime();
 
 			//runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
 			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
-			runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
+			//runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
 			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
 			//runtime.AfterPerformingAction += new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
-			return runtime;
-
 		}
 
 
 
-		public static void testRuntimeLexer()
+		public static void enterProseREPL()
 		{
-			ProseRuntime runtime = initNewRuntime();
+			initNewREPLRuntime();
 
 			while (true) {
 				printPrompt();
@@ -139,29 +94,33 @@ namespace Prose
 					break;
 				if (instring == "new.") {
 					Console.WriteLine("Building new runtime.");
-					runtime = initNewRuntime();
+					initNewREPLRuntime();
 					Console.WriteLine("Switched to new runtime.");
 					continue;
 				}
 
-				try {
-					runtime.read(instring, runtime.GlobalClient);
-				}
-				catch (RuntimeProseLanguageException e) {
-					reportException("\r\nRuntimeProseLanguageException: " + e.Report);
-				}
-
-				catch (LexerSourceException e)
-				{
-					reportException("\r\nLexer Source Exception: " + e.Report);
-				}
-//				catch (RuntimeLexerSourceException e)
-//				{
-//					Console.WriteLine("Runtime Lexer Source Exception: " + e.Report);
-//				}
-
+				tryRead (instring);
 			}
 
+		}
+
+		static void tryRead(string instring)
+		{
+			try {
+				runtime.read(instring, runtime.GlobalClient);
+			}
+			catch (RuntimeProseLanguageException e) {
+				reportException("\r\nRuntimeProseLanguageException: " + e.Report);
+			}
+			
+			catch (LexerSourceException e)
+			{
+				reportException("\r\nLexer Source Exception: " + e.Report);
+			}
+			//				catch (RuntimeLexerSourceException e)
+			//				{
+			//					Console.WriteLine("Runtime Lexer Source Exception: " + e.Report);
+			//				}
 		}
 
 
@@ -182,7 +141,7 @@ namespace Prose
 			Console.ForegroundColor = ConsoleColor.Gray;
 		}
 
-		static void reportException(string s)
+		public static void reportException(string s)
 		{
 			Console.ForegroundColor = ConsoleColor.Black;
 			Console.BackgroundColor = ConsoleColor.Yellow;
@@ -214,8 +173,14 @@ namespace Prose
 		//	Pass null to progress mark to eliminate
 		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark, int maxNodesToProcess)
 		{
+			Console.BackgroundColor = ConsoleColor.Red;
+			for (int i=0; i < runtime.CallDepth - 1; i++) {
+				Console.Write("   ");
+			}
+
 			//Stack<ProseObject> parenStack = new Stack<ProseObject>();
 			int parenCount = 0;
+			int bracketCount = 0;
 			int quadQuoteCount = 0;
 			int periodCount = 0;
 			int nodesProcessed = 0;
@@ -285,15 +250,27 @@ namespace Prose
 					Console.ForegroundColor = ConsoleColor.Gray;
 				}
 
+				//	Inside a text block everything is forced to white unless its in brackets
+				//	Deal with different highighting inside of text expressions
+				if (quadQuoteCount % 2 == 1) {
+					if (p.value == runtime.LeftSquareBracket) {
+						bracketCount++;
+					}
+					
+					//	Neutralize colors of words that behave as text
+					if (bracketCount == 0) {
+						Console.BackgroundColor = ConsoleColor.Black;
+						Console.ForegroundColor = ConsoleColor.Gray;
+					}
+					
+					if (p.value == runtime.RightSquareBracket) {
+						bracketCount--;
+					}
+				}
 
 				//	Write the output
-
-
 				Console.Write(" ");
-
 				Console.Write(p.value.getReadableString());
-//				outStr.Append(p.value.getReadableString());
-
 				//	Just so nothing too ugly can go wrong
 				Console.BackgroundColor = ConsoleColor.Black;
 
@@ -333,6 +310,7 @@ namespace Prose
 						break;
 				}
 
+
 				//	Update
 				p = p.next;
 			} while (p != null);
@@ -354,6 +332,7 @@ namespace Prose
 
 		static void beforePerformingAction(ProseRuntime runtime, PNode source)
 		{
+			writePrettyProseWithProgressMark(runtime, source, null, 1);
 		}
 
 		static void afterPerformingAction(ProseRuntime runtime, PNode source)
@@ -361,5 +340,58 @@ namespace Prose
 			writePrettyProseWithProgressMark(runtime, source, null, 1);
 		}
 
+		public static void setShowEvent(ProseRuntime runtime, List<ProseObject> args)
+		{
+			if (args.Count != 2)
+				throw new ArgumentException("SetShowEvent requires an event and a yes/no value.");
+
+			string eventWord = args[0].getReadableString();
+			string yesNoWord = args[1].getReadableString();
+
+			//	PROGRESS REPORTS
+			if (eventWord == "progress") {
+				if (yesNoWord == "yes")	{
+					if (!showProgressReport) {
+						runtime.OnProgressReport += onProgressReportDelegate;
+						showProgressReport = true;
+					}
+				}
+				else {
+					runtime.OnProgressReport -= onProgressReportDelegate;
+					showProgressReport = false;
+				}
+			}
+
+			//	POSTPARSE REPORT
+			if (eventWord == "postparse") {
+				if (yesNoWord == "yes")	{
+					if (!showParseSentenceReport) {
+						runtime.OnParseSentence += onParseSentenceDelegate;
+						showParseSentenceReport = true;
+					}
+				}
+				else {
+					runtime.OnParseSentence -= onParseSentenceDelegate;
+					showParseSentenceReport = false;
+				}
+			}
+
+			//	PREACTION REPORTS
+			if (eventWord == "preaction") {
+				if (yesNoWord == "yes")	{
+					if (!showBeforeActionReport) {
+						runtime.BeforePerformingAction += beforePerformingActionDelegate;
+						showBeforeActionReport = true;
+					}
+				}
+				else {
+					runtime.BeforePerformingAction -= beforePerformingActionDelegate;
+					showBeforeActionReport = false;
+				}
+			}
+
+
+
+		}
 	}
 }

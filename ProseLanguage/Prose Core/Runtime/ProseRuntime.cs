@@ -23,6 +23,8 @@ namespace ProseLanguage
 		private ProseClient global_client = new ProseClient();
 		public ProseClient GlobalClient {	get {	return global_client;	}	}
 
+		private int callDepth = 0;
+		public int CallDepth {	get {	return callDepth;	}}
 
 		#region Callbacks and Events
 
@@ -251,7 +253,14 @@ namespace ProseLanguage
 		//	Synchronize calls to "doReadSentence(...)"
 		private PNode readSentence(PNode sourcePtr) {
 			lock(sentenceReaderLock) {
-				return doReadSentence(sourcePtr);
+				PNode val;
+				callDepth++;
+				try {
+					val = doReadSentence(sourcePtr);
+				} finally {
+					callDepth--;
+				}
+				return val;
 			}
 		}
 
@@ -348,7 +357,13 @@ namespace ProseLanguage
 						BeforePerformingAction(this, reduced);
 
 					//	DO THE ACTION!
-					((ProseAction) reduced.value).performAction(this);
+					try {
+						((ProseAction) reduced.value).performAction(this);
+					}
+					catch (Exception e)
+					{
+						this.read ("language function exception: \"" + e.Message + "\"", GlobalClient);
+					}
 
 					//	Callback After
 					if (AfterPerformingAction != null)

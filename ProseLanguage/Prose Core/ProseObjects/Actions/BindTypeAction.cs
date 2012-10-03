@@ -23,7 +23,7 @@ namespace ProseLanguage
 			//	Look up the type.
 			Type type = assemblyWord.AssemblyObject.GetType(typeName);
 			TypeNameWord typeNameWord = new TypeNameWord(rawWords, runtime, type);
-			runtime.addWord(typeNameWord);
+			runtime.addWord(typeNameWord);		
 		}
 		
 		public string getReadableString()

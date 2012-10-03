@@ -29,6 +29,7 @@ namespace ProseLanguage
 			//	Create the phrase represented by the user's code
 			//	Extract the pattern from the match
 			ProseObject[] pattern = match.CurrPatternObject.Pattern;
+			ProseObject[] argNames = match.CurrPatternObject.elementNames.ToArray();
 			//	Create a value[] array for the new phrase
 			ProseObject[] pvalue = match.getArgumentAsProseAtIndex(5).ToArray();
 			//	Go through and make substitutions for the arguments
@@ -75,7 +76,7 @@ namespace ProseLanguage
 
 			
 			//	Create a simple phrase from these ingredients
-			SimplePhrase newPhrase = new SimplePhrase(match.Matching[1].value, pattern, pvalue);
+			SimplePhrase newPhrase = new SimplePhrase(match.Matching[1].value, pattern, argNames, pvalue);
 			
 			//	Extract the "arguments" from the PatternMatcher.
 			List<PNode> M = successfulMatch.Matching;		//	The pattern -> prose index from the match

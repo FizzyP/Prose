@@ -27,6 +27,7 @@ namespace ProseLanguage
 			private static RawWord SEMICOLON = RawWord.new_FromString(";");
 			private static RawWord COMMA = RawWord.new_FromString(",");
 			private static RawWord QUADQUOTE = RawWord.new_FromString ("\"\"");
+			private static RawWord EXCLAMATION_POINT = RawWord.new_FromString("!");
 
 			//	Parentheticals
 			private static RawWord LEFT_PAREN = RawWord.new_FromString("(");

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ProseLanguage
 {
@@ -8,12 +9,14 @@ namespace ProseLanguage
 		private ProseObject phraseClass;
 		private ProseObject[] pattern;
 		protected ProseObject[] value;
+		protected ProseObject[] argNames;
 
 
-		public SimplePhrase(ProseObject phraseClass, ProseObject[] pattern, ProseObject[] value)
+		public SimplePhrase(ProseObject phraseClass, ProseObject[] pattern, ProseObject[] argNames, ProseObject[] value)
 		{
 			this.phraseClass = phraseClass;
 			this.pattern = (ProseObject[]) pattern.Clone();
+			this.argNames = (ProseObject[]) argNames.Clone ();
 			this.value = (ProseObject[]) value.Clone();
 		}
 
@@ -123,7 +126,62 @@ namespace ProseLanguage
 
 		public string getReadableString()
 		{
-			return "phrase{}";
+			//return "phrase{}";
+
+			
+			StringBuilder str = new StringBuilder();
+			str.Append(phraseClass.getReadableString());
+			str.Append(": ");
+			for (int i=0; i < pattern.Length; i++)
+			{
+				str.Append(pattern[i].getReadableString());
+				if (argNames[i] != null)
+				{
+					str.Append("[");
+					str.Append(argNames[i].getReadableString());
+					str.Append("]");
+				}
+				str.Append(" ");
+			}
+			if (pattern.Length > 0)
+				str.Append(" ");
+
+//			if (pattern.Length > 0)
+//				str.Remove(str.Length - 1, 1);
+
+			str.Append("-> ");
+			str.Append(getValueDescriptionString());
+
+			return str.ToString();
+
+		}
+
+		public string getValueDescriptionString()
+		{
+			StringBuilder str = new StringBuilder();
+
+			for (int i=0; i < value.Length; i++) {
+				if (value[i] is ArgRefObject) {
+					int argIdx = ((ArgRefObject) value[i]).reffedArgIndex;
+					ProseObject argName = argNames[argIdx];
+					if (argName != null) {
+						str.Append(argName.getReadableString());
+					}
+					else {
+						str.Append(pattern[argIdx].getReadableString());
+					}
+				}
+				else {
+					str.Append(value[i].getReadableString());
+				}
+
+				str.Append(" ");
+			}
+
+			if (value.Length > 0)
+				str.Remove(str.Length - 1, 1);
+
+			return str.ToString();
 		}
 
 		public ProseObject[] getIsa() {	return new ProseObject[0];	}

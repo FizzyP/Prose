@@ -39,8 +39,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.cs" />
-    <Compile Include="Main\Main.cs" />
     <Compile Include="gtk-gui\generated.cs" />
+    <Compile Include="Main\ProseREPL.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
@@ -55,10 +55,6 @@
     <ProjectReference Include="..\ProseLanguage\ProseLanguage.csproj">
       <Project>{8232319A-BC04-42AA-B968-47E6FB34D59C}</Project>
       <Name>ProseLanguage</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\ProseLib\ProseLib.csproj">
-      <Project>{CB049B87-712D-4E58-AED0-30F92487B687}</Project>
-      <Name>ProseLib</Name>
     </ProjectReference>
   </ItemGroup>
 </Project>
