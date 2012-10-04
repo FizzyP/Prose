@@ -41,9 +41,22 @@ namespace ProseLanguage
 
 		public List<PNode> Matching { get { return patternComponentNodes; } }
 
+		internal Trie<ProseObject, List<Phrase>>.Node PhraseTrieNode {
+			get {	return currNode;	}
+		}
+
 		public List<Phrase> MatchedPhrases {
 			get {
 				return currNode.Value;
+			}
+		}
+
+		public ProseObject[] AssociatedPattern {
+			get {
+				if (currNode.Value.Count != 0)
+					return currNode.Value[0].getPattern();
+				else
+					return null;
 			}
 		}
 
@@ -771,9 +784,21 @@ namespace ProseLanguage
 		}
 
 		#endregion
-	
+
 	}
 }
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

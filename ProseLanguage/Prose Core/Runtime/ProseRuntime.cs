@@ -435,17 +435,18 @@ namespace ProseLanguage
 				if (progressMark == null)
 					throw new RuntimeProseLanguageFragmentException("Source ended before sentence.", source);
 
-				//	Try to reduce starting at the progressMark
-				PNode beginningOfFragment = source.prev.next;
+				//	Make a progress report callback.
+				PNode beginningOfFragment = source.prev.next;	//	If source has been changed, this is the new head
 				if (OnProgressReport != null)
 					OnProgressReport(this, beginningOfFragment, progressMark);
 
+				//	Try to reduce starting at the progressMark
 				bool didReduceAtMark;
 				PNode reducedAtMark = reduceSentenceFragmentStartingAtBeginning(progressMark, out didReduceAtMark);
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
 				//	Possibly this changed the beginning of the fragment we're looking at.
 				//	If so, record the change.
-				if (progressMark == reducedFragment)
+				if (progressMark == reducedFragment)	//	Check for the beginning
 					reducedFragment = reducedAtMark;
 				if (didReduceAtMark)
 				{
@@ -488,8 +489,8 @@ namespace ProseLanguage
 			//		Otherwise,
 			//			Add the list of child matchers it returns to the list of matchers in progress
 
-			List<PatternMatcher> matches = getSuccessfulMatchesStartingAtPNode(source);
-			List<PatternMatcher> bestMatches = getStrongestMatchesFromMatchList(matches);
+			List<PatternMatcher> matches = getSuccessfulMatchesStartingAtPNode(source);		//	Get the matches
+			List<PatternMatcher> bestMatches = getStrongestMatchesFromMatchList(matches);	//	Select the winners
 
 			//	Deal with ambiguity (too many matches)
 			if (bestMatches.Count > 1  ||
@@ -497,6 +498,7 @@ namespace ProseLanguage
 			{
 				didReduce = false;
 
+				//	Make an ambiguity callback.
 				if (OnAmbiguity != null)
 					OnAmbiguity(this, source, bestMatches);
 				else
@@ -538,7 +540,6 @@ namespace ProseLanguage
 					//	Try to extend the given matcher and get all the resulting babies.
 					List<PatternMatcher> thisMatchersBabies = matcher.matchNextPNode(sourceNode);
 
-					//	Keep the matcher
 					foreach (PatternMatcher babyMatcher in thisMatchersBabies) {
 						//	if the matcher has found a match, remember it.
 						if (babyMatcher.IsMatched)
@@ -548,7 +549,7 @@ namespace ProseLanguage
 							//							//	Rest the matcher so it can be can be continued
 //							babyMatcher.IsMatched = false;
 						}
-						else
+						else if (babyMatcher.IsntFailed)
 						{
 						//	Regardless, throw it back in the pot to see if it can be extended
 						//if (babyMatcher.IsntFailed)
@@ -610,7 +611,97 @@ namespace ProseLanguage
 					bestMatches.Add(matcher);
 			}
 
-			return bestMatches;
+			//	If we still have > 1 use inheritence to whittle down the list.
+			if (bestMatches.Count > 1)
+				return getStrongestMatchesUsingInheritence(bestMatches);
+			else
+				return bestMatches;
+		}
+
+		//	Compare matches against each other and throw out matchers which are "dominated"
+		//	according to the inheritence system.
+		private List<PatternMatcher> getStrongestMatchesUsingInheritence(List<PatternMatcher> matches)
+		{
+			List<PatternMatcher> betterMatches = new List<PatternMatcher>();
+			int idx = 0;
+			do {
+				PatternMatcher m = matches[idx];
+				betterMatches = filterMatchesUsingInheritenceAgainstOneMatcher(matches, m);
+
+				//	If we didn't manage to shorten the list then we got back the exact same list.
+				//	So, we have to look at the next spot in that list.
+				if (betterMatches.Count == matches.Count)	idx++;
+
+				matches = betterMatches;
+			}
+			while (matches.Count > 1  &&  matches.Count > idx);
+
+			return matches;
+		}
+
+
+		//	Take a pass through the list and throw out everything that loses against m.
+		private List<PatternMatcher> filterMatchesUsingInheritenceAgainstOneMatcher(List<PatternMatcher> matches,  PatternMatcher m)
+		{
+			List<PatternMatcher> winners = new List<PatternMatcher>();
+
+			foreach (PatternMatcher match in matches) {
+				int res = compareMatchers(m, match);
+				//	As long as it isn't a clear victory for m we keep match
+				if (res != 1) {
+					winners.Add(match);
+				}
+			}
+
+			return winners;
+		}
+
+		//	Returns 1 if a > b, -1 if a < b, 0 otherwise
+		int compareMatchers(PatternMatcher a, PatternMatcher b)
+		{
+			//	These matches represent exactly the same thing.
+			if (a.PhraseTrieNode == b.PhraseTrieNode) {
+				return 0;
+			}
+
+			if (firstMatcherDominatesSecond(a,b)) {
+				if (firstMatcherDominatesSecond(b, a))
+					return 0;
+				else
+					return 1;
+			}
+			else {
+				if (firstMatcherDominatesSecond(b,a))
+					return -1;
+				else
+					return 0;
+			}
+		}
+
+		bool firstMatcherDominatesSecond(PatternMatcher a, PatternMatcher b)
+		{
+			//	Compare their class word first
+
+			//	Compare the associated patterns.
+			//	Extract the patterns from a, b.
+			ProseObject[] pa = a.AssociatedPattern;
+			ProseObject[] pb = b.AssociatedPattern;
+
+			for (int i=0; i < pa.Length; i++) {
+
+				//	Most often they'll be the same and then
+				if (pa[i] == pb[i])
+					continue;
+
+				Word aword = (Word) pa[i];
+				List<ProseObject> descendents = aword.getAllDescendents(this);
+				//	If there even one piece of b's pattern doesn't descend from a's
+				//	then a doesn't dominate.
+				if (!descendents.Contains(pb[i]))
+					return false;
+			}
+
+			return true;
 		}
 
 		#endregion

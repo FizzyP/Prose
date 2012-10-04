@@ -218,6 +218,7 @@ namespace ProseLanguage
 
 			#region Phrase creation phrases
 
+			//	Comma delimited exclusive phrase creation
 			// 	, word[class]: @pattern -> @prose[value] ,
 			{
 				ProseObject[] phrasePattern = new ProseObject[]
@@ -226,7 +227,25 @@ namespace ProseLanguage
 				scope.addPhrase(phrasePhrase);
 			}
 
-			#endregion
+			//	Semicolon delimited exclusive phrase creation
+			// 	; word[class]: @pattern -> @prose[value] ;
+			{
+				ProseObject[] phrasePattern = new ProseObject[]
+				{runtime.Semicolon, runtime.Word_word, runtime.Colon, runtime.@pattern, runtime.RightArrow, runtime.@prose, runtime.Semicolon};
+				ExclusivePhraseBindingPhrase phrasePhrase = new ExclusivePhraseBindingPhrase(runtime.Word_phrase, phrasePattern);
+				scope.addPhrase(phrasePhrase);
+			}
+
+			//	Period delimited exclusive phrase creation
+			// 	. word[class]: @pattern -> @prose[value] .
+			{
+				ProseObject[] phrasePattern = new ProseObject[]
+				{runtime.Period, runtime.Word_word, runtime.Colon, runtime.@pattern, runtime.RightArrow, runtime.@prose, runtime.Period};
+				ExclusivePhraseBindingPhrase phrasePhrase = new ExclusivePhraseBindingPhrase(runtime.Word_phrase, phrasePattern);
+				scope.addPhrase(phrasePhrase);
+			}
+
+#endregion
 
 			#region Reading
 

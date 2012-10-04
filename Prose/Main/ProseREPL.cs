@@ -30,7 +30,6 @@ namespace Prose
 		{
 			initializeConsole();
 
-			howdy();
 
 			// testPreParser();
 			//testRuntimeWordParser();
@@ -72,7 +71,9 @@ namespace Prose
 		{
 			runtime = new ProseRuntime();
 
-			//runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+			runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+			showProgressReport = true;
+
 			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
 			//runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
 			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
@@ -84,6 +85,7 @@ namespace Prose
 		public static void enterProseREPL()
 		{
 			initNewREPLRuntime();
+			howdy();
 
 			while (true) {
 				printPrompt();
