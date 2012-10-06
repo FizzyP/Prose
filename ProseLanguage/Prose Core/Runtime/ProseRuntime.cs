@@ -43,6 +43,9 @@ namespace ProseLanguage
 		public delegate void AfterPerformingActionDelegate(ProseRuntime runtime, PNode source);
 		public event AfterPerformingActionDelegate AfterPerformingAction;
 
+		public delegate void OnBreakPointDelegate(ProseRuntime runtime, PNode source, BreakPointObject.RuntimeData rtdata, string script);
+		public event OnBreakPointDelegate OnBreakPoint;
+
 		#endregion
 
 		#region Constant Words/Symbols/Actions
@@ -64,6 +67,7 @@ namespace ProseLanguage
 		private Word @PATTERN;
 		private Word @RAW;
 		private Word @ACTION;
+		private Word @BREAK;
 
 		public Word @prose {	get {	return @PROSE;	} }
 		public Word @text {		get {	return @TEXT;	} }
@@ -71,6 +75,7 @@ namespace ProseLanguage
 		public Word @pattern {	get {	return @PATTERN;	} }
 		public Word @raw {		get {	return @RAW;	} }
 		public Word @action {	get {	return @ACTION;	} }
+		public Word @break {	get {	return @BREAK;	} }
 
 		#endregion
 
@@ -104,7 +109,7 @@ namespace ProseLanguage
 		public Word Comma {	get {	return COMMA;	}	}
 		public Word Quadquote {	get {	return QUADQUOTE;	}	}
 
-		public Word LefetParenthesis {	get {	return LEFT_PAREN;	}	}
+		public Word LeftParenthesis {	get {	return LEFT_PAREN;	}	}
 		public Word RightParenthesis {	get {	return RIGHT_PAREN;	}	}
 		public Word LeftSquareBracket {	get {	return LEFT_SQ_BRACKET;	}	}
 		public Word RightSquareBracket {	get {	return RIGHT_SQ_BRACKET;	}	}
@@ -141,6 +146,7 @@ namespace ProseLanguage
 			@RAW = global_scope.addWordFromRawWord(ProseLanguage.Raw.@raw);
 			@PATTERN = global_scope.addWordFromRawWord(ProseLanguage.Raw.@pattern);
 			@ACTION = global_scope.addWordFromRawWord(ProseLanguage.Raw.@action);
+			@BREAK = global_scope.addWordFromRawWord(ProseLanguage.Raw.@break);
 
 			//	Assign the private symbols at construction time
 			COLON = global_scope.addWordFromRawWord(ProseLanguage.Raw.Colon);
@@ -220,6 +226,11 @@ namespace ProseLanguage
 		public void addPhrase(Phrase phrase)
 		{
 			global_scope.addPhrase(phrase);
+		}
+
+		public void addPhraseAndDeleteExistingPhrases(Phrase phrase)
+		{
+			global_scope.addPhraseAndDeleteExistingPhrases(phrase);
 		}
 
 		#endregion
@@ -357,13 +368,13 @@ namespace ProseLanguage
 						BeforePerformingAction(this, reduced);
 
 					//	DO THE ACTION!
-					try {
+//					try {
 						((ProseAction) reduced.value).performAction(this);
-					}
-					catch (Exception e)
-					{
-						this.read ("language function exception: \"" + e.Message + "\"", GlobalClient);
-					}
+//					}
+//					catch (Exception e)
+//					{
+//						this.read ("language function exception: \"" + e.Message + "\"", GlobalClient);
+//					}
 
 					//	Callback After
 					if (AfterPerformingAction != null)
@@ -442,7 +453,9 @@ namespace ProseLanguage
 
 				//	Try to reduce starting at the progressMark
 				bool didReduceAtMark;
-				PNode reducedAtMark = reduceSentenceFragmentStartingAtBeginning(progressMark, out didReduceAtMark);
+				PNode reducedAtMark;
+				reducedAtMark = reduceSentenceFragmentStartingAtBeginning(progressMark, out didReduceAtMark);
+
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
 				//	Possibly this changed the beginning of the fragment we're looking at.
 				//	If so, record the change.
@@ -473,6 +486,49 @@ namespace ProseLanguage
 			}
 
 
+		}
+
+		private PNode reduceParentheticalExpression(PNode source, out bool didReduce)
+		{
+			//	Find the ending parenthesis
+			PNode rightParen = source;
+			while (rightParen.value != RightParenthesis) {
+				rightParen= rightParen.next;
+			}
+
+			//	Unhook the ending parenthesis from the expression we want to reduce.
+			rightParen.prev.next = null;
+
+			//	Reduce the expression (starting AFTER the left paren)
+			bool didReduceParenthetical;
+			PNode reducedExpression = reduceSentenceFragment(source.next, out didReduceParenthetical);
+
+			//We splice it in in two ways depending on whether it reduces to anything or not
+			if (reducedExpression == null)
+			{
+				//	If we get nothing back, cut out the parenthesis and continue
+				source.prev.next = rightParen.next;
+				if (rightParen.next != null)
+					rightParen.next.prev = source.prev;
+				reducedExpression = rightParen.next;		//	The first thing after the paren is what we look at next.
+			}
+			else {
+				//	If we get something back, splice it in
+				//	Cut out the left paren
+				source.prev.next = reducedExpression;
+				reducedExpression.prev = source.prev;
+
+				//	Hook the end of the expression back into the original source (skipping right paren)
+				//	First find the new end
+				PNode reducedExprEnd = reducedExpression;
+				while (reducedExprEnd.next != null)	reducedExprEnd = reducedExprEnd.next;
+				reducedExprEnd.next = rightParen.next;
+				rightParen.next.prev = reducedExprEnd;
+			}
+
+			didReduce = didReduceParenthetical;
+
+			return reducedExpression;
 		}
 
 
@@ -532,11 +588,21 @@ namespace ProseLanguage
 			//	As long as there are still active matchers...
 			while(activeMatchers.Count != 0 && sourceNode != null)
 			{
+				//	If we run into left parenthesis, reduce and eliminate before continuing.
+				if (sourceNode.value == LeftParenthesis)
+				{
+					bool didReduce;
+					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce);
+				}
+				sourceNode = debugFilterIncomingPNode(sourceNode);
+				if (sourceNode == null)
+					break;
+
+
 				//	Try to extend all of the active matchers.
 				List<PatternMatcher> babyMatchers = new List<PatternMatcher>(256);
 				foreach(PatternMatcher matcher in activeMatchers)
 				{
-					sourceNode = filterIncomingPNode(sourceNode);
 					//	Try to extend the given matcher and get all the resulting babies.
 					List<PatternMatcher> thisMatchersBabies = matcher.matchNextPNode(sourceNode);
 
@@ -569,6 +635,34 @@ namespace ProseLanguage
 			return successfullMatches;
 		}
 
+		private PNode debugFilterIncomingPNode(PNode node)
+		{
+			node = filterIncomingPNode(node);
+
+			//	Check for breakpoints
+			if (node.value is BreakPointObject)
+			{
+				BreakPointObject bp = (BreakPointObject) node.value;
+				BreakPointObject.RuntimeData rtdata = new BreakPointObject.RuntimeData();
+				
+				//	Do any action associated with the breakpoint and make the default callback if asked
+				if (bp.doBreakPoint(this, node, rtdata)) {
+					if (OnBreakPoint != null)
+						OnBreakPoint(this, node, rtdata, bp.BreakScript);
+				}
+				
+				//	Remove the breakpoint
+				if (node.prev != null)
+					node.prev.next = node.next;
+				if (node.next != null)
+					node.next.prev = node.prev;
+				//	Skip over the breakpoint
+				return node.next;
+			}
+
+			return node;
+		}
+
 		//	Possibly translate some incoming nodes
 		public PNode filterIncomingPNode(PNode node)
 		{
@@ -588,7 +682,6 @@ namespace ProseLanguage
 					return newNode;
 				}
 			}
-
 			return node;
 		}
 

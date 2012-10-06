@@ -3,12 +3,12 @@ using System.Text;
 
 namespace ProseLanguage
 {
-	public class PhraseCreationAction : ProseAction
+	public class ExclusivePhraseBindingAction : ProseAction
 	{
 		Phrase phrase;
 
 		//	An action that takes a phrase and "creates it" within a scope.
-		public PhraseCreationAction (Phrase phraseToCreate)
+		public ExclusivePhraseBindingAction (Phrase phraseToCreate)
 		{
 			phrase = phraseToCreate;
 		}
@@ -24,7 +24,7 @@ namespace ProseLanguage
 
 		public void performAction(ProseRuntime runtime)
 		{
-			runtime.addPhrase(phrase);
+			runtime.addPhraseAndDeleteExistingPhrases(phrase);
 		}
 
 		public ProseObject[] getIsa() {	return new ProseObject[0];	}

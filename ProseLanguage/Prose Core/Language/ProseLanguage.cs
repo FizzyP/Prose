@@ -21,6 +21,8 @@ namespace ProseLanguage
 			private static RawWord @PATTERN = RawWord.new_FromString ("@pattern");
 			private static RawWord @ACTION = RawWord.new_FromString ("@action");
 
+			private static RawWord @BREAK = RawWord.new_FromString ("@break");
+
 			//	Core Symbols
 			private static RawWord COLON = RawWord.new_FromString(":");
 			private static RawWord PERIOD = RawWord.new_FromString(".");
@@ -60,6 +62,7 @@ namespace ProseLanguage
 			public static RawWord @raw {	get {	return @RAW;	}	}
 			public static RawWord @pattern {	get {	return @PATTERN;	}	}
 			public static RawWord @action {	get {	return @ACTION;	}	}
+			public static RawWord @break {	get {	return @BREAK;	}	}
 
 			public static RawWord Colon {	get {	return COLON;	}	}
 			public static RawWord Period {	get {	return PERIOD;	}	}
@@ -245,7 +248,7 @@ namespace ProseLanguage
 				scope.addPhrase(phrasePhrase);
 			}
 
-#endregion
+			#endregion
 
 			#region Reading
 
@@ -312,7 +315,19 @@ namespace ProseLanguage
 				scope.addPhrase(applyMethodPhrase);
 			}
 
-#endregion
+			#endregion
+
+			//	Add a breakpoint
+			{
+				ProseObject[] p = new ProseObject[]
+				{runtime.@break};
+				Phrase addBreakpointPhrase = new BreakPointPhrase(runtime.Word_phrase, p);
+				scope.addPhrase(addBreakpointPhrase);
+			}
+
+			#region Debugger
+
+			#endregion
 
 
 			#region Experimental

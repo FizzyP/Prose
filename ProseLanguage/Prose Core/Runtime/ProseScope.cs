@@ -121,6 +121,18 @@ namespace ProseLanguage
 			return created;
 		}
 
+		public bool addPhraseAndDeleteExistingPhrases(Phrase phrase)
+		{
+			//	Get the node where the phrase belongs
+			bool created;
+			Trie<ProseObject, List<Phrase>>.Node phraseNode = patternTrie.getOrCreateNodeAtObjectPath(phrase.getPattern(), out created);
+			
+			//	Make this phrase the only one at the node.
+			phraseNode.setValue(new List<Phrase>(1));
+			phraseNode.Value.Add(phrase);
+			return created;
+		}
+
 
 		#endregion
 

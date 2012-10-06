@@ -51,7 +51,6 @@
     <Compile Include="Prose Core\Runtime\ProseClient.cs" />
     <Compile Include="Prose Core\ProseObjects\Actions\WriteAction.cs" />
     <Compile Include="Prose Core\ProseObjects\Actions\WordBindingAction.cs" />
-    <Compile Include="Prose Core\ProseObjects\Actions\PhraseCreationAction.cs" />
     <Compile Include="Prose Core\ProseObjects\StringLiteralObject.cs" />
     <Compile Include="Prose Core\ProseObjects\ProseObjectBase.cs" />
     <Compile Include="Prose Core\ProseObjects\RawWordObject.cs" />
@@ -94,6 +93,9 @@
     <Compile Include="Prose Core\ProseObjects\Actions\BindMethodAction.cs" />
     <Compile Include="Prose Core\Phrases\BindMethodPhrase.cs" />
     <Compile Include="Prose Core\Phrases\ApplyMethodPhrase.cs" />
+    <Compile Include="Prose Core\ProseObjects\Actions\ExclusivePhraseBindingAction.cs" />
+    <Compile Include="Prose Core\ProseObjects\BreakPointObject.cs" />
+    <Compile Include="Prose Core\Phrases\BreakPointPhrase.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

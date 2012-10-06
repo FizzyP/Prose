@@ -144,7 +144,7 @@ namespace ProseLanguage
 			//		isComplete = true;
 
 			//	You're NEVER allowed to match parenthesis
-			if (obj == runtime.LefetParenthesis || obj == runtime.RightParenthesis) {
+			if (obj == runtime.LeftParenthesis || obj == runtime.RightParenthesis) {
 				throw new RuntimeFailure("getListOfMatchingPatternObjects received parenthesis.");
 			}
 
@@ -478,13 +478,14 @@ namespace ProseLanguage
 				//	Look up words which would match if they were in a pattern.
 				List<ProseObject> matchingPatternWords = getMatchingPatternWords(obj);
 				//	Look these words up to see if actual patterns exist.
+				canExtendThisProseBlock = (matchingPatternWords.Count != 0);
 				foreach(ProseObject match in matchingPatternWords)
 				{
 					//	If it's not a period and the attempt to extend @prose immediately failed,
 					//	then we continue matching @prose.  If the attempt didn't immediately fail then
 					//	the rules say we must leave @prose.
-					if (obj != runtime.Period) // && !babyMatcher.IsntFailed)
-						canExtendThisProseBlock = true;
+					if (obj == runtime.Period) // && !babyMatcher.IsntFailed)
+						canExtendThisProseBlock = false;
 
 					if (match == runtime.@prose) continue;	//	back to back @prose outlawed.
 
@@ -500,7 +501,8 @@ namespace ProseLanguage
 					babyMatcher.while_MATCHING_OBJECT_extendWith(node, matchNode);		//	Append the new node
 					babyMatchers.Add(babyMatcher);										//	Eventually return this baby matcher
 				
-
+					//	If it's possible to exit an @prose block, the matcher MUST
+					canExtendThisProseBlock = false;
 
 				}
 			}

@@ -83,7 +83,7 @@ namespace ProseLanguage
 
 			value = new ProseObject[3];
 			value[0] = M[0].value;
-			value[1] = new PhraseCreationAction(newPhrase);
+			value[1] = new ExclusivePhraseBindingAction(newPhrase);
 			value[2] = M[6].value;
 
 			return replaceWithValueAt(evaluateMe, successfulMatch);

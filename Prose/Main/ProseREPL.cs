@@ -26,6 +26,9 @@ namespace Prose
 		private static ProseRuntime.AfterPerformingActionDelegate afterPerformingActionDelegate = new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
 		private static bool showAfterActionReport = false;
 
+		private static int breakPointDepth = 0;
+
+
 		public static void Main (string[] args)
 		{
 			initializeConsole();
@@ -44,6 +47,7 @@ namespace Prose
 
 		public static void howdy()
 		{
+			restoreConsoleColor();
 			Console.WriteLine("------------------------------------------");
 			Console.WriteLine("Welcome to Prose.");
 			Console.WriteLine("");
@@ -51,6 +55,7 @@ namespace Prose
 
 		public static void seeYaLater()
 		{
+			restoreConsoleColor();
 			Console.WriteLine("------------------------------------------");
 			Console.WriteLine ("Goodbye. Write more Prose soon!");
 		}
@@ -71,13 +76,17 @@ namespace Prose
 		{
 			runtime = new ProseRuntime();
 
-			runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
-			showProgressReport = true;
+//			runtime.OnProgressReport += new ProseRuntime.OnProgressReportDelegate(onProgressReport);
+//			showProgressReport = true;
 
 			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
-			//runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
+			runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
+			showParseSentenceReport = true;
 			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
 			//runtime.AfterPerformingAction += new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
+
+
+			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
 		}
 
 
@@ -87,12 +96,18 @@ namespace Prose
 			initNewREPLRuntime();
 			howdy();
 
+			ProseREPLLoop();
+
+		}
+
+		public static void ProseREPLLoop()
+		{
 			while (true) {
 				printPrompt();
 				string instring = Console.ReadLine();
 				restoreConsoleColor();
-
-				if (instring == "exit.")
+				
+				if (instring == "exit." || instring == "continue.")
 					break;
 				if (instring == "new.") {
 					Console.WriteLine("Building new runtime.");
@@ -100,10 +115,15 @@ namespace Prose
 					Console.WriteLine("Switched to new runtime.");
 					continue;
 				}
+				if (instring == "clean.") {
+					Console.WriteLine("Building new runtime.");
+					initNewCleanRuntime();
+					Console.WriteLine("Switched to new runtime.");
+					continue;
+				}
 
 				tryRead (instring);
 			}
-
 		}
 
 		static void tryRead(string instring)
@@ -153,9 +173,13 @@ namespace Prose
 
 		static void printPrompt()
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.WriteLine();
+
+			writeBreakPointDepthMarker();
 			Console.ForegroundColor = ConsoleColor.Cyan;
 			Console.BackgroundColor = ConsoleColor.Black;
-			Console.Write("\r\n> ");
+			Console.Write("> ");
 		}
 
 		static void debugOutput(string s)
@@ -172,13 +196,27 @@ namespace Prose
 			writePrettyProseWithProgressMark(runtime, beginningOfFragment, progressMark, 0);
 		}
 
-		//	Pass null to progress mark to eliminate
-		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark, int maxNodesToProcess)
+		static void writeBreakPointDepthMarker()
+		{
+			int depth = runtime.CallDepth;
+			Console.BackgroundColor = ConsoleColor.Red;
+			for (int i=0; i < runtime.CallDepth; i++) {
+				Console.Write("   ");
+			}
+		}
+
+		static void writeStackDepthMarker(ProseRuntime runtime)
 		{
 			Console.BackgroundColor = ConsoleColor.Red;
 			for (int i=0; i < runtime.CallDepth - 1; i++) {
 				Console.Write("   ");
 			}
+		}
+
+		//	Pass null to progress mark to eliminate
+		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark, int maxNodesToProcess)
+		{
+			writeStackDepthMarker(runtime);
 
 			//Stack<ProseObject> parenStack = new Stack<ProseObject>();
 			int parenCount = 0;
@@ -190,12 +228,18 @@ namespace Prose
 			PNode p = start;
 			do {
 				nodesProcessed++;
+
+				while (p != null && p.value == null) {
+					p = p.next;
+				}
+
 				if (p.value == null) {
 					p = p.next;
 					continue;
 				}
-
 				p = runtime.filterIncomingPNode(p);
+				if (p == null)
+					break;
 
 				//	PROGRESS MARK
 				if (p == progressMark) {
@@ -206,6 +250,11 @@ namespace Prose
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.Write (" ");
 				}
+
+				//	Write a leading space
+				Console.BackgroundColor = ConsoleColor.Black;
+				Console.Write(" ");
+
 
 				//	OBJECTS
 				if (p.value is ProseAction) {
@@ -270,12 +319,24 @@ namespace Prose
 					}
 				}
 
+				//	Of course
+				if (	p.value == runtime.@break
+				    ||	p.value is BreakPointObject)
+				{
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
+				}
+
 				//	Write the output
-				Console.Write(" ");
+				//
+
 				Console.Write(p.value.getReadableString());
 				//	Just so nothing too ugly can go wrong
 				Console.BackgroundColor = ConsoleColor.Black;
 
+				//
+				//
+				//
 
 				//
 				//	Other exits
@@ -286,7 +347,7 @@ namespace Prose
 				//
 				//	Keep track of parentheticals to know if we can quit
 				//
-				if (	p.value == runtime.LefetParenthesis
+				if (	p.value == runtime.LeftParenthesis
 				    ||	p.value == runtime.LeftCurlyBracket
 				    ||	p.value == runtime.LeftSquareBracket)
 				{
@@ -311,6 +372,7 @@ namespace Prose
 					if (periodCount == 2)
 						break;
 				}
+
 
 
 				//	Update
@@ -340,6 +402,17 @@ namespace Prose
 		static void afterPerformingAction(ProseRuntime runtime, PNode source)
 		{
 			writePrettyProseWithProgressMark(runtime, source, null, 1);
+		}
+
+		public static void onBreakPoint(ProseRuntime runtime, PNode source, BreakPointObject.RuntimeData rtdata, string script)
+		{
+			breakPointDepth++;
+
+			runtime.read(script, runtime.GlobalClient);
+			runtime.read("read file \"Libraries/REPL/onbreak.prose\"", runtime.GlobalClient);
+			ProseREPLLoop();
+
+			breakPointDepth--;
 		}
 
 		public static void setShowEvent(ProseRuntime runtime, List<ProseObject> args)
