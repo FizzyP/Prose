@@ -103,6 +103,7 @@ namespace ProseLanguage
 			}
 			else if (atWord == runtime.@text) {
 				newMatcher.switchToState_MATCHING_TEXT();
+				newMatcher.textMatchingQQcount = textMatchingQQcount;
 			}
 			else if (atWord == runtime.@pattern) {
 				newMatcher.switchToState_MATCHING_PATTERN();
@@ -363,6 +364,13 @@ namespace ProseLanguage
 				switchToState_MATCHING_PATTERN();
 				while_MATCHING_PATTERN_extendWith(node, patternNode);
 			}
+			//  A text expression masquerading as a string.
+			else if (	key == runtime.@string
+			         && node.value == runtime.Quadquote)
+			{
+				switchToState_MATCHING_TEXT();
+				while_MATCHING_TEXT_extendWith(node, patternNode);
+			}
 			else {
 
 				//	Either this node matches directly with a word in the pattern, or it's the first node in
@@ -570,15 +578,57 @@ namespace ProseLanguage
 
 		#region @text Matching
 
+		int textMatchingQQcount = 0;
+
 		private void switchToState_MATCHING_TEXT()
 		{
 			state = MatcherState.MATCHING_TEXT;
+			textMatchingQQcount = 0;
 		}
 
 		List<PatternMatcher>  while_MATCHING_TEXT_matchNextObject(PNode node)
 		{
 			ProseObject obj = node.value;
-			return null;
+
+			List<PatternMatcher> babyMatchers = new List<PatternMatcher>();
+
+			//	Extend ourselves!
+			//	NOTE: We don't change the node we're using!
+			PatternMatcher babyMatcher = makeCopyWithStateFromAtWord(runtime.@text);	//	Clone ourselves
+			babyMatcher.while_MATCHING_TEXT_extendWith(node, currNode);
+			babyMatchers.Add(babyMatcher);
+
+			return babyMatchers;
+		}
+
+		private void while_MATCHING_TEXT_extendWith(PNode node, Trie<ProseObject, List<Phrase>>.Node patternNode)
+		{
+			this.numObjectsMatched++;			
+			this.currNode = patternNode;
+
+			if (node.value == runtime.Quadquote) {
+				textMatchingQQcount++;
+				//	If this is the first time through, record the beginning of the text block
+				if (textMatchingQQcount == 1) {
+					patternComponentNodes.Add(node);
+				}
+			}
+			
+			//	We become matched when the text ends.
+			if (	currNode.Value != null && currNode.Value.Count != 0
+			    &&	textMatchingQQcount == 2)
+			{
+				//isMatched = true;
+				becomeMatched(node.next);
+			}
+			else if (textMatchingQQcount > 2)
+			{
+				state = MatcherState.FAILED;
+			}
+			else if (textMatchingQQcount == 2)
+			{
+				switchToState_MATCHING_OBJECT();
+			}
 		}
 
 		#endregion
@@ -740,6 +790,40 @@ namespace ProseLanguage
 		#endregion
 
 		#region Argument Extraction
+
+		//	Just before
+		public void autoCastArguments()
+		{
+			ProseObject[] pattern = AssociatedPattern;
+			for (int i=0; i < pattern.Length; i++)
+			{
+				//	Check for auto-formatting of text expression into string
+				if (	pattern[i] == runtime.@string
+				    &&	Matching[i].value == runtime.Quadquote)
+				{
+					PNode textEnd;
+					PNode textStart = getArgumentBounds(i, out textEnd);
+
+					//	Create a StringLiteralObject to substitute
+					string textAsString = runtime.parseTextExpressionIntoString(textStart, textEnd);
+					PNode literal = new PNode(new StringLiteralObject(textAsString));
+
+					//	Splice in this literal
+					literal.prev = textStart.prev;
+					if (textStart.prev != null)
+						textStart.prev.next = literal;
+					literal.next = textEnd;
+					if (textEnd != null)
+						textEnd.prev = literal;
+
+					//	Correct the match list.
+					Matching[i] = literal;
+				}
+			}
+		}
+
+
+
 
 		public List<ProseObject> getArgumentAsProseAtIndex(int idx)
 		{

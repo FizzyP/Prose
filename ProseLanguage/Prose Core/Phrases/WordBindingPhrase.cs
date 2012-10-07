@@ -19,6 +19,10 @@ namespace ProseLanguage
 		{
 		}
 
+		//	Expects the pattern:
+		//
+		//	, word[parent] : word[child] ,
+		//
 		//	Replaces a "parent : child" expression with an action that effects the
 		//	word creation/inheritance assertion.
 		//override

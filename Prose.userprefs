@@ -1,8 +1,8 @@
 ﻿<Properties>
   <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug|x86" />
-  <MonoDevelop.Ide.Workbench ActiveDocument="Prose/Main/ProseREPL.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="ProseLib/Lib/Time.cs">
     <Files>
-      <File FileName="Prose/Main/ProseREPL.cs" Line="116" Column="15" />
+      <File FileName="Prose/Main/ProseREPL.cs" Line="91" Column="31" />
       <File FileName="ProseLanguage/Prose Core/Runtime/ProseRuntime.cs" Line="580" Column="23" />
       <File FileName="ProseLanguage/Prose Core/Phrases/BindAssemblyPhrase.cs" Line="31" Column="22" />
       <File FileName="ProseLanguage/Prose Core/Structures/PNode.cs" Line="17" Column="1" />
@@ -17,7 +17,7 @@
       <File FileName="ProseLanguage/Prose Core/ProseObjects/Words/MethodNameWord.cs" Line="7" Column="54" />
       <File FileName="ProseLanguage/Prose Core/Phrases/BindTypePhrase.cs" Line="31" Column="46" />
       <File FileName="ProseLanguage/Prose Core/Language/RawWord.cs" Line="20" Column="3" />
-      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/MethodDelegateAction.cs" Line="35" Column="5" />
+      <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/MethodDelegateAction.cs" Line="43" Column="1" />
       <File FileName="ProseLanguage/Prose Core/ProseObjects/Actions/BindMethodAction.cs" Line="30" Column="1" />
       <File FileName="ProseLanguage/Prose Core/Phrases/BindMethodPhrase.cs" Line="21" Column="43" />
       <File FileName="ProseLanguage/Prose Core/ProseObjects/Words/Word.cs" Line="59" Column="3" />
@@ -33,6 +33,7 @@
       <File FileName="ProseLanguage/Prose Core/Phrases/ContentsOfTextFilePhrase.cs" Line="1" Column="1" />
       <File FileName="ProseLanguage/Prose Core/Phrases/BreakPointPhrase.cs" Line="28" Column="4" />
       <File FileName="ProseLanguage/Prose Core/Phrases/SimplePhrase.cs" Line="50" Column="1" />
+      <File FileName="ProseLib/Lib/Time.cs" Line="33" Column="55" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

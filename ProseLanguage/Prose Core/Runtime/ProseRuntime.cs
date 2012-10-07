@@ -6,6 +6,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Text;
 
 namespace ProseLanguage
 {
@@ -488,48 +489,6 @@ namespace ProseLanguage
 
 		}
 
-		private PNode reduceParentheticalExpression(PNode source, out bool didReduce)
-		{
-			//	Find the ending parenthesis
-			PNode rightParen = source;
-			while (rightParen.value != RightParenthesis) {
-				rightParen= rightParen.next;
-			}
-
-			//	Unhook the ending parenthesis from the expression we want to reduce.
-			rightParen.prev.next = null;
-
-			//	Reduce the expression (starting AFTER the left paren)
-			bool didReduceParenthetical;
-			PNode reducedExpression = reduceSentenceFragment(source.next, out didReduceParenthetical);
-
-			//We splice it in in two ways depending on whether it reduces to anything or not
-			if (reducedExpression == null)
-			{
-				//	If we get nothing back, cut out the parenthesis and continue
-				source.prev.next = rightParen.next;
-				if (rightParen.next != null)
-					rightParen.next.prev = source.prev;
-				reducedExpression = rightParen.next;		//	The first thing after the paren is what we look at next.
-			}
-			else {
-				//	If we get something back, splice it in
-				//	Cut out the left paren
-				source.prev.next = reducedExpression;
-				reducedExpression.prev = source.prev;
-
-				//	Hook the end of the expression back into the original source (skipping right paren)
-				//	First find the new end
-				PNode reducedExprEnd = reducedExpression;
-				while (reducedExprEnd.next != null)	reducedExprEnd = reducedExprEnd.next;
-				reducedExprEnd.next = rightParen.next;
-				rightParen.next.prev = reducedExprEnd;
-			}
-
-			didReduce = didReduceParenthetical;
-
-			return reducedExpression;
-		}
 
 
 		//	Match must start at the beginning
@@ -554,9 +513,11 @@ namespace ProseLanguage
 			{
 				didReduce = false;
 
-				//	Make an ambiguity callback.
-				if (OnAmbiguity != null)
+				//	Make an ambiguity callback and throw an exception to bail out of this mess.
+				if (OnAmbiguity != null) {
 					OnAmbiguity(this, source, bestMatches);
+					throw new RuntimeProseLanguageException("Sentence is ambiguous.", source);
+				}
 				else
 					throw new RuntimeProseLanguageException("Sentence is ambiguous.", source);
 			}
@@ -572,8 +533,13 @@ namespace ProseLanguage
 			Phrase bestPhrase = bestMatcher.MatchedPhrases[0];
 			didReduce = true;
 
+			//	Do any automatic casting necessary to make the arguments match the pattern.
+			bestMatcher.autoCastArguments();
+
 			return bestPhrase.evaluate(source, bestMatcher);
 		}
+
+
 
 		private List<PatternMatcher> getSuccessfulMatchesStartingAtPNode(PNode source)
 		{
@@ -685,10 +651,90 @@ namespace ProseLanguage
 			return node;
 		}
 
+
+		
+		private PNode reduceParentheticalExpression(PNode source, out bool didReduce)
+		{
+			//	Find the ending parenthesis
+			PNode rightParen = source;
+			while (rightParen.value != RightParenthesis) {
+				rightParen= rightParen.next;
+			}
+			
+			//	Unhook the ending parenthesis from the expression we want to reduce.
+			rightParen.prev.next = null;
+			
+			//	Reduce the expression (starting AFTER the left paren)
+			bool didReduceParenthetical;
+			PNode reducedExpression;
+			
+			callDepth++;
+			try {
+				reducedExpression= reduceSentenceFragment(source.next, out didReduceParenthetical);
+			}
+			finally {
+				callDepth--;
+			}
+			
+			//We splice it in in two ways depending on whether it reduces to anything or not
+			if (reducedExpression == null)
+			{
+				//	If we get nothing back, cut out the parenthesis and continue
+				source.prev.next = rightParen.next;
+				if (rightParen.next != null)
+					rightParen.next.prev = source.prev;
+				reducedExpression = rightParen.next;		//	The first thing after the paren is what we look at next.
+			}
+			else {
+				//	If we get something back, splice it in
+				//	Cut out the left paren
+				source.prev.next = reducedExpression;
+				reducedExpression.prev = source.prev;
+				
+				//	Hook the end of the expression back into the original source (skipping right paren)
+				//	First find the new end
+				PNode reducedExprEnd = reducedExpression;
+				while (reducedExprEnd.next != null)	reducedExprEnd = reducedExprEnd.next;
+				reducedExprEnd.next = rightParen.next;
+				rightParen.next.prev = reducedExprEnd;
+			}
+			
+			didReduce = didReduceParenthetical;
+			
+			return reducedExpression;
+		}
+
+
+		//	Read a text expression and reduce it to a string
+		//	textStart = opening "", textEnd = object after closing ""
+		public string parseTextExpressionIntoString(PNode textStart, PNode textEnd)
+		{
+			StringBuilder str = new StringBuilder();
+
+			for (PNode node = textStart.next;
+			     node != null  &&  node.next != textEnd;
+			     node = node.next)
+			{
+				str.Append(node.value.getReadableString());
+				str.Append(" ");
+			}
+
+			if (str.Length > 0)
+				str.Remove(str.Length - 1, 1);
+
+			return str.ToString();
+		}
+
+
 		//	Takes only the best match according to the rules!
 		private List<PatternMatcher> getStrongestMatchesFromMatchList(List<PatternMatcher> matches)
 		{
 			List<PatternMatcher> bestMatches = new List<PatternMatcher>();
+
+			//	First filter based on the class word.  This is the "highest order bit"
+			matches = filterMatchesBasedOnClassWord(matches);
+			if (matches.Count < 2)
+				return matches;
 
 			//	Figure out the longest length
 			int longestMatchLength = 0;
@@ -728,6 +774,13 @@ namespace ProseLanguage
 				matches = betterMatches;
 			}
 			while (matches.Count > 1  &&  matches.Count > idx);
+
+			return matches;
+		}
+
+		private List<PatternMatcher> filterMatchesBasedOnClassWord(List<PatternMatcher> matches)
+		{
+			//List<PatternMatcher> betterMatches = new List<PatternMatcher>();
 
 			return matches;
 		}

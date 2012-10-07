@@ -82,11 +82,16 @@ namespace Prose
 			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
 			runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
 			showParseSentenceReport = true;
+
 			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
 			//runtime.AfterPerformingAction += new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
 
+			showAfterActionReport = false;
+			showBeforeActionReport = false;
+			showProgressReport = false;
 
 			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
+			runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
 		}
 
 
@@ -155,6 +160,7 @@ namespace Prose
 			Console.Clear();
 			Console.Clear();
 			Console.Clear();
+			//Console.SetBufferSize(120, 100);
 		}
 
 		static void restoreConsoleColor()
@@ -216,6 +222,7 @@ namespace Prose
 		//	Pass null to progress mark to eliminate
 		static void writePrettyProseWithProgressMark(ProseRuntime runtime, PNode start, PNode progressMark, int maxNodesToProcess)
 		{
+
 			writeStackDepthMarker(runtime);
 
 			//Stack<ProseObject> parenStack = new Stack<ProseObject>();
@@ -283,10 +290,12 @@ namespace Prose
 				         || p.value == runtime.MinusColon
 				         || p.value == runtime.RightArrow
 				         || p.value == runtime.ColonPlus
-				         || p.value == runtime.ColonMinus)
+				         || p.value == runtime.ColonMinus
+				         || p.value == runtime.Quadquote)
 				{
 					Console.BackgroundColor = ConsoleColor.Black;
 					Console.ForegroundColor = ConsoleColor.Cyan;
+
 				}
 				else if (	p.value is AssemblyNameWord
 				         ||	p.value is TypeNameWord
@@ -311,7 +320,7 @@ namespace Prose
 					//	Neutralize colors of words that behave as text
 					if (bracketCount == 0) {
 						Console.BackgroundColor = ConsoleColor.Black;
-						Console.ForegroundColor = ConsoleColor.Gray;
+						Console.ForegroundColor = ConsoleColor.Cyan;
 					}
 					
 					if (p.value == runtime.RightSquareBracket) {
@@ -319,13 +328,17 @@ namespace Prose
 					}
 				}
 
-				//	Of course
 				if (	p.value == runtime.@break
 				    ||	p.value is BreakPointObject)
 				{
 					Console.BackgroundColor = ConsoleColor.White;
 					Console.ForegroundColor = ConsoleColor.Black;
 				}
+
+
+				//	Prewrite logic
+
+
 
 				//	Write the output
 				//
@@ -334,9 +347,22 @@ namespace Prose
 				//	Just so nothing too ugly can go wrong
 				Console.BackgroundColor = ConsoleColor.Black;
 
-				//
-				//
-				//
+				//	Postwrite logic
+
+				if (		p.value == runtime.RightArrow
+				         || p.value == runtime.ColonPlus
+				         || p.value == runtime.ColonMinus)
+				{
+					if (	Console.CursorLeft > 60
+					    ||	Console.CursorLeft + 40 > Console.BufferWidth)
+					{
+						Console.WriteLine();
+						writeStackDepthMarker(runtime);
+						restoreConsoleColor();
+						Console.Write ("\t\t");
+					}
+				}
+
 
 				//
 				//	Other exits
@@ -387,6 +413,14 @@ namespace Prose
 
 		static void onAmbiguity(ProseRuntime runtime, PNode source, List<PatternMatcher> matches)
 		{
+			restoreConsoleColor();
+			Console.WriteLine("Multiple interpretations:");
+			foreach (PatternMatcher match in matches)
+			{
+				foreach (Phrase phrase in match.MatchedPhrases) {
+					Console.WriteLine(phrase.getReadableString());
+				}
+			}
 		}
 
 		static void onParseSentence(ProseRuntime runtime, PNode source)
