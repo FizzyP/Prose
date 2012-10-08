@@ -711,15 +711,32 @@ namespace ProseLanguage
 		{
 			StringBuilder str = new StringBuilder();
 
+			int prevObjSpaceRequest = 0;
+			int thisObjSpaceRequest = 0;
+
 			for (PNode node = textStart.next;
 			     node != null  &&  node.next != textEnd;
 			     node = node.next)
 			{
-				str.Append(node.value.getReadableString());
-				str.Append(" ");
+				ProseObject obj = node.value;
+
+				if (obj is StringLiteralObject) {
+					str.Append(((StringLiteralObject) obj).literal);
+					thisObjSpaceRequest = -1;
+				}
+				else {
+					str.Append(obj.getReadableString());
+					thisObjSpaceRequest = 1;
+				}
+
+				if (prevObjSpaceRequest != -1 && thisObjSpaceRequest != -1)
+					str.Append(" ");
+
+				//	Update
+				prevObjSpaceRequest = thisObjSpaceRequest;
 			}
 
-			if (str.Length > 0)
+			if (str[str.Length-1] == ' ')
 				str.Remove(str.Length - 1, 1);
 
 			return str.ToString();
@@ -837,6 +854,11 @@ namespace ProseLanguage
 
 				//	Most often they'll be the same and then
 				if (pa[i] == pb[i])
+					continue;
+
+				if (pa[i] == @prose && pb[i] != @prose)
+					return false;
+				else if (pa[i] != @prose && pb[i] == @prose)
 					continue;
 
 				Word aword = (Word) pa[i];

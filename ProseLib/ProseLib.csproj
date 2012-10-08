@@ -46,9 +46,5 @@
       <Project>{8232319A-BC04-42AA-B968-47E6FB34D59C}</Project>
       <Name>ProseLanguage</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Prose\Prose.csproj">
-      <Project>{584CC775-6DEF-4B80-80A1-ACE824DEFC9A}</Project>
-      <Name>Prose</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>

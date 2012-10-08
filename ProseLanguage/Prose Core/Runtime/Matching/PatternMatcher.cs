@@ -100,6 +100,9 @@ namespace ProseLanguage
 
 			if (atWord == runtime.@prose) {
 				newMatcher.switchToState_MATCHING_PROSE();
+				if (parentheticalStack != null)
+					newMatcher.parentheticalStack = new Stack<ProseObject>(parentheticalStack);
+				newMatcher.inText = inText;
 			}
 			else if (atWord == runtime.@text) {
 				newMatcher.switchToState_MATCHING_TEXT();
@@ -352,9 +355,10 @@ namespace ProseLanguage
 				//	Either this node matches directly with a word in the pattern, or it's the first node in
 				//	a match of @prose, @text, @pattern.  Either way, it goes in the patternComponentNodes.
 				patternComponentNodes.Add(node);
-				this.currNode = patternNode;
-				this.numObjectsMatched++;
+//				this.currNode = patternNode;
+				//this.numObjectsMatched++;
 				switchToState_MATCHING_PROSE();
+				while_MATCHING_PROSE_extendWith(node, patternNode);
 				if (currNode.Value != null && currNode.Value.Count != 0) {
 					becomeMatched(node.next);
 				}
@@ -397,6 +401,8 @@ namespace ProseLanguage
 
 		#region @prose Matching
 
+		int objectsInCurrentProseblock = 0;
+
 		private void switchToState_MATCHING_PROSE()
 		{
 			state = MatcherState.MATCHING_PROSE;
@@ -404,6 +410,7 @@ namespace ProseLanguage
 			//	Create a new block to hold the building Prose.
 			proseBlock = new ProseBlockObject();
 			parentheticalStack = new Stack<ProseObject>();
+			objectsInCurrentProseblock = 0;
 		}
 
 
@@ -429,9 +436,12 @@ namespace ProseLanguage
 			//	No need to check for () because it's eliminated before we're ever called.
 			if (obj == runtime.LeftCurlyBracket) {
 				canExtendThisProseBlock = true;
+				//	Do this in extend
+				//parentheticalStack.Push(runtime.LeftCurlyBracket);
 			}
 			else if (obj == runtime.LeftSquareBracket) {
 				canExtendThisProseBlock = true;
+				//parentheticalStack.Push(runtime.LeftSquareBracket);
 			}
 			else if (obj == runtime.RightCurlyBracket) {
 				ProseObject matchingParenthetical = tryPeekParenthetical();
@@ -440,6 +450,7 @@ namespace ProseLanguage
 				}
 				//	At this point, we agree the curly bracket makes sense, so we pop it's counterpart off the stack.
 				shouldPopParentheticalStack = true;
+				canExtendThisProseBlock = true;
 			}
 			else if (obj == runtime.RightSquareBracket) {
 				ProseObject matchingParenthetical = tryPeekParenthetical();
@@ -536,6 +547,7 @@ namespace ProseLanguage
 				//	Extend ourselves!
 				//	NOTE: We don't change the node we're using!
 				PatternMatcher babyMatcher = makeCopyWithStateFromAtWord(runtime.@prose);	//	Clone ourselves
+				babyMatcher.objectsInCurrentProseblock = objectsInCurrentProseblock;
 				babyMatcher.while_MATCHING_PROSE_extendWith(node, currNode);
 				babyMatchers.Add(babyMatcher);
 			}
@@ -563,8 +575,21 @@ namespace ProseLanguage
 		private void while_MATCHING_PROSE_extendWith(PNode node, Trie<ProseObject, List<Phrase>>.Node patternNode)
 		{
 			this.numObjectsMatched++;
-
 			this.currNode = patternNode;
+			this.objectsInCurrentProseblock++;
+
+			ProseObject obj = node.value;
+
+			if (obj == runtime.LeftCurlyBracket) {
+				parentheticalStack.Push(runtime.LeftCurlyBracket);
+			}
+			//	The first time this is called is from outside fo while_MATCHING_PROSE_matchNext
+			else if (obj == runtime.Quadquote &&  objectsInCurrentProseblock == 1) {
+				//	In this case, we treat this as an opening quadquote.
+				parentheticalStack.Push(runtime.Quadquote);		//	Remember the left ""
+				inText = true;
+				//shouldToggleInText = true;						//	inText = true;
+			}
 
 			//	...we don't really do anything.  The beginning of the @prose block was already noted
 			//	If there's something here, then we are a match
@@ -830,7 +855,7 @@ namespace ProseLanguage
 			//	Start at the given index
 			PNode start = patternComponentNodes[idx];
 
-			//	Slightly differen if asked for the last one.
+			//	Slightly different if asked for the last one.
 			PNode end;
 			if (idx == patternComponentNodes.Count - 1)
 			{
@@ -838,6 +863,15 @@ namespace ProseLanguage
 			}
 			else {
 				end = patternComponentNodes[idx + 1];
+			}
+
+			//	Auto-unwrapping of {}
+			if (	start.value == runtime.LeftCurlyBracket
+			    &&	end.prev.value == runtime.RightCurlyBracket)
+			{
+				//	If the prose block starts with { and ends with } then throw them out.
+				start = start.next;
+				end = end.prev;
 			}
 
 			List<ProseObject> proseOut = new List<ProseObject>(12);

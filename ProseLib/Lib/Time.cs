@@ -34,28 +34,48 @@ namespace ProseLib
 				Console.WriteLine("--" + seconds + "--" + script);
 
 				//	Configure the timer
-				Timer timer = new Timer(seconds);
-				//timer.AutoReset = false;
-				timer.Elapsed += delegate(object sender, ElapsedEventArgs e)
-					{
-						lock(lockObj) {
-							//	Look up the timer fired
-							int idx = timerList.BinarySearch((Timer) sender);
-							//	Run the script
-							//runtime.read(scriptList[idx], runtime.GlobalClient);
-							runtimeList[idx].read("write \"Hello Carly\"", runtimeList[idx].GlobalClient);
-						//	Remove the timer and the script from the lists
-							timerList.RemoveAt(idx);
-							scriptList.RemoveAt(idx);
-							runtimeList.RemoveAt(idx);
-						}
-					};
+				Timer timer = new Timer(seconds * 1000);
+				timer.AutoReset = false;
+				timer.Elapsed += new ElapsedEventHandler(onTimeElapsed);
+
+//				timer.Elapsed += delegate(object sender, ElapsedEventArgs e)
+//					{
+//						lock(lockObj) {
+//							//	Look up the timer fired
+//							int idx = timerList.BinarySearch((Timer) sender);
+//						Console.WriteLine(idx);
+//							//	Run the script
+//							//runtime.read(scriptList[idx], runtime.GlobalClient);
+//							runtimeList[idx].read("write \"Hello Carly\"", runtimeList[idx].GlobalClient);
+//						//	Remove the timer and the script from the lists
+//							timerList.RemoveAt(idx);
+//							scriptList.RemoveAt(idx);
+//							runtimeList.RemoveAt(idx);
+//						}
+//					};
 				timer.Enabled = true;
 
 				//	Add the timer and the script to the list
 				timerList.Add(timer);
 				scriptList.Add(script);
 				runtimeList.Add(runtime);
+			}
+		}
+
+
+		private static void onTimeElapsed (object sender, ElapsedEventArgs e)
+		{
+			lock(lockObj) {
+				//	Look up the timer fired
+				int idx = timerList.IndexOf((Timer) sender);
+				Console.WriteLine(idx);
+				//	Run the script
+			runtimeList[idx].read(scriptList[idx], runtimeList[idx].GlobalClient);
+				//runtimeList[idx].read("write \"Hello Carly\"", runtimeList[idx].GlobalClient);
+				//	Remove the timer and the script from the lists
+				timerList.RemoveAt(idx);
+				scriptList.RemoveAt(idx);
+				runtimeList.RemoveAt(idx);
 			}
 		}
 
