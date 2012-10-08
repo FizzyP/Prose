@@ -36,6 +36,7 @@
     <Compile Include="AssemblyInfo.cs" />
     <Compile Include="Lib\REPL.cs" />
     <Compile Include="Lib\Time.cs" />
+    <Compile Include="Lib\RuntimeRunnable.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>

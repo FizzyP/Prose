@@ -823,6 +823,8 @@ namespace ProseLanguage
 			for (int i=0; i < pattern.Length; i++)
 			{
 				//	Check for auto-formatting of text expression into string
+
+				//	Auto-cast a text expression into a string by evaluating it.
 				if (	pattern[i] == runtime.@string
 				    &&	Matching[i].value == runtime.Quadquote)
 				{

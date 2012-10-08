@@ -252,9 +252,39 @@ namespace ProseLanguage
 			//	Debug
 			//Console.WriteLine("After runtime lexer: " + parsedSource.getReadableString() );
 
+			read(parsedSource);
+		}
 
+
+		public void read(List<ProseObject> source, int startIdx, int endIdx, ProseClient who)
+		{
+			//	Convert source into a linked list structure.
+			PNode head = new PNode();
+			PNode initPeriod = new PNode(Period);
+			head.next = initPeriod;
+			initPeriod.prev = head;
+			PNode prev = initPeriod;
+			for (int i=startIdx; i < endIdx; i++) {
+				ProseObject obj = source[i];
+				PNode p = new PNode(obj);
+				p.prev = prev;
+				prev.next = p;
+				// Update
+				prev = p;
+			}
+
+			PNode termPeriod = new PNode(Period);
+			prev.next = termPeriod;
+			termPeriod.prev = prev;
+
+			//	Read the new format starting with the initial period.
+			read(head);
+		}
+
+		public void read(PNode source)
+		{
 			//	Read the source one sentence at a time.
-			PNode sourcePtr = parsedSource.next.next;	//	Skip the little header PNode and the inserted .
+			PNode sourcePtr = source.next.next;	//	Skip the little header PNode and the inserted .
 			while (sourcePtr != null)
 			{
 				sourcePtr = readSentence(sourcePtr);
@@ -558,7 +588,7 @@ namespace ProseLanguage
 				if (sourceNode.value == LeftParenthesis)
 				{
 					bool didReduce;
-					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce);
+					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce, RightParenthesis);
 				}
 				sourceNode = debugFilterIncomingPNode(sourceNode);
 				if (sourceNode == null)
@@ -653,11 +683,11 @@ namespace ProseLanguage
 
 
 		
-		private PNode reduceParentheticalExpression(PNode source, out bool didReduce)
+		private PNode reduceParentheticalExpression(PNode source, out bool didReduce, ProseObject rightParentheticalObject)
 		{
 			//	Find the ending parenthesis
 			PNode rightParen = source;
-			while (rightParen.value != RightParenthesis) {
+			while (rightParen.value != rightParentheticalObject) {
 				rightParen= rightParen.next;
 			}
 			
@@ -720,6 +750,16 @@ namespace ProseLanguage
 			{
 				ProseObject obj = node.value;
 
+				//	WARNING:  MUST COME FIRST BECAUSE IT MAY CHANGE THE VALUE OF node
+				//	Left square bracket opens an inline prose expression that must be evaluated
+				if (obj == LeftSquareBracket)
+				{
+					bool didReduce;
+					node = reduceParentheticalExpression(node, out didReduce, RightSquareBracket);
+					obj = node.value;
+				}
+
+				//	String literals substitute their contents directly
 				if (obj is StringLiteralObject) {
 					str.Append(((StringLiteralObject) obj).literal);
 					thisObjSpaceRequest = -1;
