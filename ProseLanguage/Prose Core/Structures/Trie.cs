@@ -127,6 +127,7 @@ namespace ProseLanguage
 			private KeyT character;
 			private ValT value;
 			private Dictionary<KeyT, Node> childMap = new Dictionary<KeyT, Node>();
+			private Node parent;
 
 
 			public ValT Value {
@@ -157,6 +158,7 @@ namespace ProseLanguage
 			public void setChildNode(KeyT character, Node childNode)
 			{
 				childMap.Add(character, childNode);
+				childNode.parent = this;
 			}
 
 			public void setValue(ValT value)
@@ -173,6 +175,19 @@ namespace ProseLanguage
 			{
 				get {
 					return childMap.Count > 0;
+				}
+			}
+
+			public List<KeyT> ReverseCharacterPath
+			{
+				get {
+					List<KeyT> path = new List<KeyT>(10);
+					Node node = this;
+					while (node != null && node.character != null) {
+						path.Add(node.character);
+						node = node.parent;
+					} 
+					return path;
 				}
 			}
 

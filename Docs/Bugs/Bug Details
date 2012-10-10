@@ -1,0 +1,9 @@
+
+KNOWN BUGS
+
+
+1.	@prose crashes on [] because it fails to count the left one.
+
+#	In this example the first "" and the [ end up on the stack out of order.  When the
+#	interpreter reaches the ] it pops of a "" which doesn't match so it crashes.
+W: do. P: , do @prose[z], -> z. do write "" [a] "".

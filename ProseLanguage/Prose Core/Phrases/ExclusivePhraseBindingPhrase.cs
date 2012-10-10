@@ -86,7 +86,9 @@ namespace ProseLanguage
 			value[1] = new ExclusivePhraseBindingAction(newPhrase);
 			value[2] = M[6].value;
 
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+			PNode returnNode = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return returnNode;
 		}
 	}
 }

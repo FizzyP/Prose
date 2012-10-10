@@ -1,5 +1,6 @@
 using System;
 using ProseLib;
+using System.Collections.Generic;
 
 namespace Prose
 {
@@ -7,8 +8,8 @@ namespace Prose
 	{
 		public static void Main (string[] args)
 		{
-
 			REPL.initializeConsole();
+			REPL.runRegressionTest();
 			REPL.enterProseREPL();
 			REPL.seeYaLater();
 		}

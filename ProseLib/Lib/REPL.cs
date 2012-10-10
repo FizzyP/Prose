@@ -31,7 +31,18 @@ namespace ProseLib
 		private static bool showBeforeActionReport = false;
 		private static ProseRuntime.AfterPerformingActionDelegate afterPerformingActionDelegate = new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
 		private static bool showAfterActionReport = false;
-		
+
+		private static ProseRuntime.BeforeReductionDelegate beforeReductionDelegate = new ProseRuntime.BeforeReductionDelegate(beforeReduction);
+		private static bool showBeforeReductionReport = false;
+		private static ProseRuntime.AfterReductionDelegate afterReductionDelegate = new ProseRuntime.AfterReductionDelegate(afterReduction);
+		private static bool showAfterReductionReport = false;
+
+		private static bool showOnMatchReport = false;
+		private static ProseRuntime.OnMatchDelegate onMatchDelegate = new ProseRuntime.OnMatchDelegate(onMatch);
+		private static bool showOnMatcherFailureReport = false;
+		private static ProseRuntime.OnMatcherFailureDelegate onMatcherFailureDelegate = new ProseRuntime.OnMatcherFailureDelegate(onMatcherFailure);
+
+
 		private static int breakPointDepth = 0;
 		
 		
@@ -81,9 +92,18 @@ namespace ProseLib
 			showAfterActionReport = false;
 			showBeforeActionReport = false;
 			showProgressReport = false;
+			showBeforeReductionReport = false;
+			showAfterActionReport = false;
+			showOnMatchReport = false;
 			
 			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
 			runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
+		}
+
+		public static void runRegressionTest()
+		{
+			initNewCleanRuntime();
+			runtime.read ("read file \"Libraries/REPL/regression.prose\"", runtime.GlobalClient);
 		}
 		
 		
@@ -430,6 +450,16 @@ namespace ProseLib
 			writePrettyProseWithProgressMark(runtime, source, null, 1);
 		}
 		
+		static void beforeReduction(ProseRuntime runtime, PNode source)
+		{
+			writePrettyProseWithProgressMark(runtime, source, null, 0);
+		}
+
+		static void afterReduction(ProseRuntime runtime, PNode source)
+		{
+			writePrettyProseWithProgressMark(runtime, source, null, 0);
+		}
+
 		public static void onBreakPoint(ProseRuntime runtime, PNode source, BreakPointObject.RuntimeData rtdata, string script)
 		{
 			breakPointDepth++;
@@ -440,7 +470,27 @@ namespace ProseLib
 			
 			breakPointDepth--;
 		}
-		
+
+		public static void onMatch(ProseRuntime runtime, PatternMatcher match) {
+			restoreConsoleColor();
+			foreach (Phrase phrase in match.MatchedPhrases)
+				Console.WriteLine("Pattern Match> " + phrase.getReadableString());
+		}
+
+		public static void onMatcherFailure(ProseRuntime runtime, PatternMatcher match) {
+			restoreConsoleColor();
+			StringBuilder str = new StringBuilder();
+			ProseObject[] partialPattern = match.AssociatedPattern;
+			foreach(ProseObject po in partialPattern) {
+				str.Append(po.getReadableString());
+				str.Append(" ");
+			}
+			if (str.Length != 0)
+				str.Remove(str.Length-1, 1);
+
+			Console.WriteLine("Match Fail> " + str.ToString());
+		}
+
 		public static void setShowEvent(ProseRuntime runtime, List<ProseObject> args)
 		{
 			if (args.Count != 2)
@@ -490,8 +540,65 @@ namespace ProseLib
 					showBeforeActionReport = false;
 				}
 			}
-		}
 
+
+			//	PREREDUCTION REPORTS
+			if (eventWord == "prereduction") {
+				if (yesNoWord == "yes")	{
+					if (!showBeforeReductionReport) {
+						runtime.BeforeReduction += beforeReductionDelegate;
+						showBeforeReductionReport = true;
+					}
+				}
+				else {
+					runtime.BeforeReduction -= beforeReductionDelegate;
+					showBeforeReductionReport = false;
+				}
+			}
+
+			//	POSTREDUCTION REPORTS
+			if (eventWord == "postreduction") {
+				if (yesNoWord == "yes")	{
+					if (!showAfterReductionReport) {
+						runtime.AfterReduction += afterReductionDelegate;
+						showAfterReductionReport = true;
+					}
+				}
+				else  {
+					runtime.AfterReduction -= afterReductionDelegate;
+					showAfterReductionReport = false;
+				}
+			}
+		
+			//	MATCH REPORTS
+			if (eventWord == "matches") {
+				if (yesNoWord == "yes")	{
+					if (!showOnMatchReport) {
+						runtime.OnMatch += onMatchDelegate;
+						showOnMatchReport = true;
+					}
+				}
+				else {
+					runtime.OnMatch -= onMatchDelegate;
+					showOnMatchReport = false;
+				}
+			}
+
+			//	MATCHER FAILURE REPORTS
+			if (eventWord == "matchfails") {
+				if (yesNoWord == "yes")	{
+					if (!showOnMatcherFailureReport) {
+						runtime.OnMatcherFailure += onMatcherFailureDelegate;
+						showOnMatcherFailureReport = true;
+					}
+				}
+				else {
+					runtime.OnMatcherFailure -= onMatcherFailureDelegate;
+					showOnMatcherFailureReport = false;
+				}
+			}
+
+		}
 
 		public static void WriteMethod(ProseRuntime runtime, List<ProseObject> args)
 		{

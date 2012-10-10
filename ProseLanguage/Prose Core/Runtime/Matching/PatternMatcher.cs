@@ -53,10 +53,17 @@ namespace ProseLanguage
 
 		public ProseObject[] AssociatedPattern {
 			get {
-				if (currNode.Value.Count != 0)
+				if (	currNode.Value != null
+				    && 	currNode.Value.Count != 0)
+				{
 					return currNode.Value[0].getPattern();
-				else
-					return null;
+				}
+				else {
+					//	If there's no match to use, read it from currNode
+					ProseObject[] path = currNode.ReverseCharacterPath.ToArray();
+					Array.Reverse(path);
+					return path;
+				}
 			}
 		}
 
@@ -100,8 +107,14 @@ namespace ProseLanguage
 
 			if (atWord == runtime.@prose) {
 				newMatcher.switchToState_MATCHING_PROSE();
-				if (parentheticalStack != null)
-					newMatcher.parentheticalStack = new Stack<ProseObject>(parentheticalStack);
+				if (parentheticalStack != null) {
+					//newMatcher.parentheticalStack = new Stack<ProseObject>(parentheticalStack);
+					newMatcher.parentheticalStack = new Stack<ProseObject>();
+					ProseObject[] objs = parentheticalStack.ToArray();
+					for (int i=objs.Length - 1; i >= 0; i--)
+						newMatcher.parentheticalStack.Push(objs[i]);
+					
+				}
 				newMatcher.inText = inText;
 			}
 			else if (atWord == runtime.@text) {
@@ -441,6 +454,7 @@ namespace ProseLanguage
 			}
 			else if (obj == runtime.LeftSquareBracket) {
 				canExtendThisProseBlock = true;
+				//	Do this in extend
 				//parentheticalStack.Push(runtime.LeftSquareBracket);
 			}
 			else if (obj == runtime.RightCurlyBracket) {
@@ -582,6 +596,9 @@ namespace ProseLanguage
 
 			if (obj == runtime.LeftCurlyBracket) {
 				parentheticalStack.Push(runtime.LeftCurlyBracket);
+			}
+			else if (obj == runtime.LeftSquareBracket) {
+				parentheticalStack.Push(runtime.LeftSquareBracket);
 			}
 			//	The first time this is called is from outside fo while_MATCHING_PROSE_matchNext
 			else if (obj == runtime.Quadquote &&  objectsInCurrentProseblock == 1) {

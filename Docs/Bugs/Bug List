@@ -1,0 +1,10 @@
+
+
+1.	@prose matching fails when the block contains nesting like this "" [ ] ""
+
+2.	@text matching fails entirely (although @string matching will correctly accept text)
+
+3.	The progress mark should skip over text blocks and {} blocks.  It doesn't.
+
+4.	Phrases need to set value = null after being applied (unless they're ordinary SimplePhrases).
+	Otherwise, weird data shows up in the debugger.

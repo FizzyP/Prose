@@ -135,7 +135,7 @@ namespace ProseLanguage
 			for (int i=0; i < pattern.Length; i++)
 			{
 				str.Append(pattern[i].getReadableString());
-				if (argNames[i] != null)
+				if (argNames != null && argNames[i] != null)
 				{
 					str.Append("[");
 					str.Append(argNames[i].getReadableString());
@@ -158,6 +158,9 @@ namespace ProseLanguage
 
 		public string getValueDescriptionString()
 		{
+			if (value == null)
+				return "$FOREIGN$";
+
 			StringBuilder str = new StringBuilder();
 
 			for (int i=0; i < value.Length; i++) {

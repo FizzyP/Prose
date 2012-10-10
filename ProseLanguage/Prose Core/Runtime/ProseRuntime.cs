@@ -47,6 +47,18 @@ namespace ProseLanguage
 		public delegate void OnBreakPointDelegate(ProseRuntime runtime, PNode source, BreakPointObject.RuntimeData rtdata, string script);
 		public event OnBreakPointDelegate OnBreakPoint;
 
+		public delegate void BeforeReductionDelegate(ProseRuntime runtime, PNode source);
+		public event BeforeReductionDelegate BeforeReduction;
+
+		public delegate void AfterReductionDelegate(ProseRuntime runtime, PNode source);
+		public event AfterReductionDelegate AfterReduction;
+
+		public delegate void OnMatchDelegate(ProseRuntime runtime, PatternMatcher matcher);
+		public event OnMatchDelegate OnMatch;
+
+		public delegate void OnMatcherFailureDelegate(ProseRuntime runtime, PatternMatcher matcher);
+		public event OnMatcherFailureDelegate OnMatcherFailure;
+
 		#endregion
 
 		#region Constant Words/Symbols/Actions
@@ -566,7 +578,16 @@ namespace ProseLanguage
 			//	Do any automatic casting necessary to make the arguments match the pattern.
 			bestMatcher.autoCastArguments();
 
-			return bestPhrase.evaluate(source, bestMatcher);
+			if (BeforeReduction != null)
+				BeforeReduction(this, source);
+
+			//	REDUCE!
+			PNode reducedSource = bestPhrase.evaluate(source, bestMatcher);
+
+			if (AfterReduction != null)
+				AfterReduction(this, reducedSource);
+
+			return reducedSource;
 		}
 
 
@@ -602,10 +623,15 @@ namespace ProseLanguage
 					//	Try to extend the given matcher and get all the resulting babies.
 					List<PatternMatcher> thisMatchersBabies = matcher.matchNextPNode(sourceNode);
 
+					int failCount = 0;	//	Count the baby matchers that arrive dead.
 					foreach (PatternMatcher babyMatcher in thisMatchersBabies) {
 						//	if the matcher has found a match, remember it.
 						if (babyMatcher.IsMatched)
 						{
+							//	Callback for successful match
+							if (OnMatch != null)
+								OnMatch(this, babyMatcher);
+
 							successfullMatches.Add(babyMatcher);
 							babyMatchers.Add(babyMatcher);
 							//							//	Rest the matcher so it can be can be continued
@@ -617,7 +643,21 @@ namespace ProseLanguage
 						//if (babyMatcher.IsntFailed)
 							babyMatchers.Add(babyMatcher);
 						}
+						else {
+							//	This baby matcher was stillborn
+							failCount++;
+						}
 					}
+
+					//	If the matcher produced no good children then that branch is "dead"
+					//	Only count it as a "fail" if it isn't a success itself.
+					if (	thisMatchersBabies.Count - failCount == 0
+					    &&	!matcher.IsMatched)
+					{
+						if (OnMatcherFailure != null)
+							OnMatcherFailure(this, matcher);
+					}
+
 
 
 				}
