@@ -473,6 +473,7 @@ namespace ProseLanguage
 				}
 				//	At this point, we agree the square bracket makes sense, so we pop it's counterpart off the stack.
 				shouldPopParentheticalStack = true;
+				canExtendThisProseBlock = true;
 			}
 			else if (obj == runtime.Quadquote) {
 				//	In this case, we count that we are in a text block, but we don't "read it as text".  Instead, we just

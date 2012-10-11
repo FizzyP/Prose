@@ -1,6 +1,6 @@
 
 
-1.	@prose matching fails when the block contains nesting like this "" [ ] ""
+	1.	@prose matching fails when the block contains nesting like this "" [ ] ""
 
 2.	@text matching fails entirely (although @string matching will correctly accept text)
 

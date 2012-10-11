@@ -27,7 +27,13 @@ namespace ProseLanguage
 			//value[0] = new BreakPointObject("");
 			value[0] = new BreakPointObject("# Breakpoint script - \n");
 
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return ret;
+		}
+
+		public override string getStaticValueDescriptionString() {
+			return "$BREAK$";
 		}
 
 	}

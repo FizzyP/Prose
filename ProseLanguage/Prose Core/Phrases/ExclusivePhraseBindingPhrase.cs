@@ -86,10 +86,15 @@ namespace ProseLanguage
 			value[1] = new ExclusivePhraseBindingAction(newPhrase);
 			value[2] = M[6].value;
 
-			PNode returnNode = replaceWithValueAt(evaluateMe, successfulMatch);
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
 			value = null;
-			return returnNode;
+			return ret;
 		}
+
+		public override string getStaticValueDescriptionString() {
+			return "XBindPhrase{}";
+		}
+
 	}
 }
 

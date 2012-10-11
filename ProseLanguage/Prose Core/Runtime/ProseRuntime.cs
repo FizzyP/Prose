@@ -926,6 +926,7 @@ namespace ProseLanguage
 			//	Compare their class word first
 
 			//	Compare the associated patterns.
+
 			//	Extract the patterns from a, b.
 			ProseObject[] pa = a.AssociatedPattern;
 			ProseObject[] pb = b.AssociatedPattern;
@@ -936,9 +937,15 @@ namespace ProseLanguage
 				if (pa[i] == pb[i])
 					continue;
 
+				//	@prose is weaker than everything else
 				if (pa[i] == @prose && pb[i] != @prose)
 					return false;
 				else if (pa[i] != @prose && pb[i] == @prose)
+					continue;
+
+				else if (pa[i] == @raw && pb[i] is Word)
+					return false;
+				else if (pa[i] is Word && pb[i] == @raw)
 					continue;
 
 				Word aword = (Word) pa[i];

@@ -25,8 +25,16 @@ namespace ProseLanguage
 			value = new ProseObject[1];
 			value[0] = new StringLiteralObject(source);
 			//	Call the super-class to do the substitution.
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return ret;
 		}
+
+		public override string getStaticValueDescriptionString() {
+			return "\"...text file contents...\"";
+		}
+
 	}
 }
 

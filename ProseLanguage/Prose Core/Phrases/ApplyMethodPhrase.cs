@@ -33,8 +33,14 @@ namespace ProseLanguage
 			value[0] = M[0].value;
 			value[1] = action;
 			value[2] = M[3].value;
-			
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return ret;
+		}
+
+		public override string getStaticValueDescriptionString() {
+			return "ApplyMethod{}";
 		}
 		
 	}

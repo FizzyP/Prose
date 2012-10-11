@@ -35,8 +35,15 @@ namespace ProseLanguage
 			value[1] = action;
 			value[2] = M[7].value;
 			
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return ret;
 		}
+
+		public override string getStaticValueDescriptionString() {
+			return "BindType{}";
+		}
+
 		
 	}
 }

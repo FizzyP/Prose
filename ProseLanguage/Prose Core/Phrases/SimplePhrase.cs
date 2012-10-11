@@ -158,8 +158,9 @@ namespace ProseLanguage
 
 		public string getValueDescriptionString()
 		{
+			//	If the value hasn't been determined, look up a static description instead.
 			if (value == null)
-				return "$FOREIGN$";
+				return getStaticValueDescriptionString();
 
 			StringBuilder str = new StringBuilder();
 
@@ -185,6 +186,11 @@ namespace ProseLanguage
 				str.Remove(str.Length - 1, 1);
 
 			return str.ToString();
+		}
+
+		public virtual string getStaticValueDescriptionString()
+		{
+			return "Substitute{}";
 		}
 
 		public ProseObject[] getIsa() {	return new ProseObject[0];	}

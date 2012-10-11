@@ -57,8 +57,15 @@ namespace ProseLanguage
 			value[2] = M[4].value;		//	Terminal punctuation
 
 			//	Call the super-class to do the substitution.
-			return replaceWithValueAt(evaluateMe, successfulMatch);
+			PNode ret = replaceWithValueAt(evaluateMe, successfulMatch);
+			value = null;
+			return ret;
 		}
+
+		public override string getStaticValueDescriptionString() {
+			return "+:{}";
+		}
+
 
 	}
 }

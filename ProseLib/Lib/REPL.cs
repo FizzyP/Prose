@@ -95,6 +95,7 @@ namespace ProseLib
 			showBeforeReductionReport = false;
 			showAfterActionReport = false;
 			showOnMatchReport = false;
+			showOnMatcherFailureReport = false;
 			
 			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
 			runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
@@ -425,7 +426,8 @@ namespace ProseLib
 		
 		static void onAmbiguity(ProseRuntime runtime, PNode source, List<PatternMatcher> matches)
 		{
-			restoreConsoleColor();
+			Console.BackgroundColor = ConsoleColor.Yellow;
+			Console.ForegroundColor = ConsoleColor.Black;
 			Console.WriteLine("Multiple interpretations:");
 			foreach (PatternMatcher match in matches)
 			{
