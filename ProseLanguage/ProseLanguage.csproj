@@ -96,6 +96,7 @@
     <Compile Include="Prose Core\ProseObjects\Actions\ExclusivePhraseBindingAction.cs" />
     <Compile Include="Prose Core\ProseObjects\BreakPointObject.cs" />
     <Compile Include="Prose Core\Phrases\BreakPointPhrase.cs" />
+    <Compile Include="Prose Core\ProseObjects\Words\WordBase.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
