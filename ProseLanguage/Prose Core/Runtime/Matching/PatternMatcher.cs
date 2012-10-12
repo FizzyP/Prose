@@ -840,15 +840,17 @@ namespace ProseLanguage
 			ProseObject[] pattern = AssociatedPattern;
 			for (int i=0; i < pattern.Length; i++)
 			{
+				PNode componentStart, componentEnd;
+				componentStart = getArgumentBounds(i, out componentEnd);
+
 				//	Check for auto-formatting of text expression into string
 
 				//	Auto-cast a text expression into a string by evaluating it.
 				if (	pattern[i] == runtime.@string
 				    &&	Matching[i].value == runtime.Quadquote)
 				{
-					PNode textEnd;
-					PNode textStart = getArgumentBounds(i, out textEnd);
-
+					PNode textStart = componentStart;
+					PNode textEnd = componentEnd;
 					//	Create a StringLiteralObject to substitute
 					string textAsString = runtime.parseTextExpressionIntoString(textStart, textEnd);
 					PNode literal = new PNode(new StringLiteralObject(textAsString));
@@ -863,6 +865,22 @@ namespace ProseLanguage
 
 					//	Correct the match list.
 					Matching[i] = literal;
+					continue;
+				}
+
+				//	Auto-cast a prose expression by unwrapping {}
+				if (	pattern[i] == runtime.@prose
+				    &&	componentStart.value == runtime.LeftCurlyBracket
+				    &&	componentEnd.prev.value == runtime.RightCurlyBracket)
+				{
+					PNode leftCurly = componentStart;
+					PNode rightCurly = componentEnd.prev;
+					//	Correct the match list
+					Matching[i] = leftCurly.next;
+					//	Eliminate the curly brackets
+					leftCurly.removeSelf();
+					rightCurly.removeSelf();
+					continue;
 				}
 			}
 		}
@@ -885,14 +903,16 @@ namespace ProseLanguage
 				end = patternComponentNodes[idx + 1];
 			}
 
-			//	Auto-unwrapping of {}
-			if (	start.value == runtime.LeftCurlyBracket
-			    &&	end.prev.value == runtime.RightCurlyBracket)
-			{
-				//	If the prose block starts with { and ends with } then throw them out.
-				start = start.next;
-				end = end.prev;
-			}
+			//	NO LONGER NECESSARY
+			//	We do this in the autoCast method.
+//			//	Auto-unwrapping of {}
+//			if (	start.value == runtime.LeftCurlyBracket
+//			    &&	end.prev.value == runtime.RightCurlyBracket)
+//			{
+//				//	If the prose block starts with { and ends with } then throw them out.
+//				start = start.next;
+//				end = end.prev;
+//			}
 
 			List<ProseObject> proseOut = new List<ProseObject>(12);
 			PNode p = start;
@@ -920,6 +940,7 @@ namespace ProseLanguage
 				end = patternComponentNodes[idx + 1];
 			}
 			terminator = end;
+
 			return start;
 		}
 

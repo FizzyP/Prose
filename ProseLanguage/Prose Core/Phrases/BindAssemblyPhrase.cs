@@ -23,7 +23,7 @@ namespace ProseLanguage
 			//	Extract the "arguments" from the PatternMatcher.
 			List<PNode> M = match.Matching;			//	The pattern -> prose index from the match
 			string dllFileName = ((StringLiteralObject) M[4].value).literal;
-			RawWordObject newAssemblyWord = (RawWordObject) M[6].value;
+			ProseObject newAssemblyWord = M[6].value;
 			LoadAssemblyAction action = new LoadAssemblyAction(dllFileName, newAssemblyWord);
 
 			value = new ProseObject[3];

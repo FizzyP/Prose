@@ -83,12 +83,11 @@ namespace ProseLib
 			//			showProgressReport = true;
 			
 			//runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
-			runtime.OnParseSentence += new ProseRuntime.OnParseSentenceDelegate(onParseSentence);
-			showParseSentenceReport = true;
-			
+
 			//runtime.BeforePerformingAction += new ProseRuntime.BeforePerformingActionDelegate(beforePerformingAction);
 			//runtime.AfterPerformingAction += new ProseRuntime.AfterPerformingActionDelegate(afterPerformingAction);
 			
+			showParseSentenceReport = false;
 			showAfterActionReport = false;
 			showBeforeActionReport = false;
 			showProgressReport = false;
@@ -97,6 +96,13 @@ namespace ProseLib
 			showOnMatchReport = false;
 			showOnMatcherFailureReport = false;
 			
+
+			runtime.OnParseSentence += onParseSentenceDelegate;
+			showParseSentenceReport = true;
+
+			runtime.AfterReduction += afterReductionDelegate;
+			showAfterReductionReport = true;
+
 			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
 			runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
 		}

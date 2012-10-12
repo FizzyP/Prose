@@ -144,8 +144,10 @@ namespace ProseLanguage
 
 		public void removeSelf()
 		{
-			prev.next = next;
-			next.prev = prev;
+			if (prev != null)
+				prev.next = next;
+			if (next != null)
+				next.prev = prev;
 		}
 
 

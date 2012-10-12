@@ -74,6 +74,7 @@ namespace ProseLanguage
 					int idx = ((ArgRefObject) obj).reffedArgIndex;
 					//ProseObject evaluated = evaluateMe.forwardSeek(index).value;
 
+
 					PNode subStart, subEnd;
 					subStart = match.getArgumentBounds(idx, out subEnd);
 
@@ -85,6 +86,7 @@ namespace ProseLanguage
 					while (readHead != subEnd) {
 						//	Hook p into the output
 						if (prevWriteHead != null) {
+
 							prevWriteHead.next = writeHead;
 						}
 						writeHead.prev = prevWriteHead;
@@ -114,10 +116,12 @@ namespace ProseLanguage
 
 			//	When we're done, tie the end of the output list back into the input list.
 			//	Note: prevWriteHead is actually the last PNode we wrote.
-			if (prevWriteHead != null)
+			if (prevWriteHead != null) {
 				prevWriteHead.next = match.terminatorNode;
 				//prevWriteHead.next = evaluateMe.forwardSeek(match.NumObjectsMatched);
-
+//				if (match.terminatorNode != null)
+//					match.terminatorNode.prev = prevWriteHead;
+			}
 
 			return firstNodeInNewList;
 		}
