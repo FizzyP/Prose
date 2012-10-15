@@ -502,15 +502,22 @@ namespace ProseLanguage
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
 				//	Possibly this changed the beginning of the fragment we're looking at.
 				//	If so, record the change.
-				if (progressMark == reducedFragment)	//	Check for the beginning
-					reducedFragment = reducedAtMark;
+				if (progressMark == reducedFragment)	//	Check for the beginning, if we're at the beginning then...
+					reducedFragment = reducedAtMark;	//	...need to keep track of the moving beginning.
 				if (didReduceAtMark)
 				{
 					//	If we reduced something, then start over to see if we can match from the beginning.
 					progressMark = reducedFragment;
-				} else
-				{
+
+//					//	First check to see if we're moving it past an action.
+//					if (progressMark.value is ProseAction) {
+//						//	If so, return to allow the action to be performed.
+//						return progressMark;
+//					}
+				}
+				else {
 					//	We didn't reduce anything, so move the progress mark forward.
+
 					progressMark = progressMark.next;
 					//	If we run into a sentence ending symbol like this, then we're finished.
 					if (progressMark == null || symbolEndsSentence(progressMark))
@@ -522,7 +529,6 @@ namespace ProseLanguage
 						//	Returning this should give us the beginning of the source fragment whether we
 						//  replaced anything or not.
 						return prevNode.next;
-
 					}
 				}
 
@@ -608,8 +614,15 @@ namespace ProseLanguage
 				//	If we run into left parenthesis, reduce and eliminate before continuing.
 				if (sourceNode.value == LeftParenthesis)
 				{
+					PNode leftParen = sourceNode;
+					//	Reduce the parenthetical
 					bool didReduce;
 					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce, RightParenthesis);
+					//	Some matchers may have retained a reference to the leftParen, so swap it for whatever is there now.
+					foreach (PatternMatcher matcher in activeMatchers) {
+						if (matcher.terminatorNode == leftParen)
+							matcher.terminatorNode = sourceNode;
+					}
 				}
 				sourceNode = debugFilterIncomingPNode(sourceNode);
 				if (sourceNode == null)

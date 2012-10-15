@@ -100,8 +100,8 @@ namespace ProseLib
 			runtime.OnParseSentence += onParseSentenceDelegate;
 			showParseSentenceReport = true;
 
-			runtime.AfterReduction += afterReductionDelegate;
-			showAfterReductionReport = true;
+			//runtime.AfterReduction += afterReductionDelegate;
+			showAfterReductionReport = false;
 
 			runtime.OnBreakPoint += new ProseRuntime.OnBreakPointDelegate(onBreakPoint);
 			runtime.OnAmbiguity += new ProseRuntime.OnAmbiguityDelegate(onAmbiguity);
@@ -110,9 +110,15 @@ namespace ProseLib
 		public static void runRegressionTest()
 		{
 			initNewCleanRuntime();
-			runtime.read ("read file \"Libraries/REPL/regression.prose\"", runtime.GlobalClient);
+			try {
+				runtime.read ("read file \"Libraries/REPL/regression.prose\"", runtime.GlobalClient);
+			}
+			catch (Exception e) {
+				Console.WriteLine("Automated regression test failed: " + e.Message);
+				Console.WriteLine("Press return to continue.");
+				Console.ReadLine();
+			}
 		}
-		
 		
 		
 		public static void enterProseREPL()
@@ -134,14 +140,20 @@ namespace ProseLib
 				if (instring == "exit." || instring == "continue.")
 					break;
 				if (instring == "new.") {
+					restoreConsoleColor();
 					Console.WriteLine("Building new runtime.");
 					initNewREPLRuntime();
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
 					Console.WriteLine("Switched to new runtime.");
 					continue;
 				}
 				if (instring == "clean.") {
+					restoreConsoleColor();
 					Console.WriteLine("Building new runtime.");
 					initNewCleanRuntime();
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
 					Console.WriteLine("Switched to new runtime.");
 					continue;
 				}
@@ -214,10 +226,13 @@ namespace ProseLib
 			Console.WriteLine(s);
 			//			restoreConsoleColor();
 		}
-		
+
 		static void onProgressReport(ProseRuntime runtime, PNode beginningOfFragment, PNode progressMark)
 		{
 			//debugOutput("- " + beginningOfFragment.getReadableStringWithProgressMark(progressMark));
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Blue;
+			Console.Write("progress>      ");
 			writePrettyProseWithProgressMark(runtime, beginningOfFragment, progressMark, 0);
 		}
 		
@@ -375,7 +390,9 @@ namespace ProseLib
 					if (	Console.CursorLeft > 60
 					    ||	Console.CursorLeft + 40 > Console.BufferWidth)
 					{
+						restoreConsoleColor();
 						Console.WriteLine();
+						Console.Write ("               ");
 						writeStackDepthMarker(runtime);
 						restoreConsoleColor();
 						Console.Write ("\t\t");
@@ -434,7 +451,7 @@ namespace ProseLib
 		{
 			Console.BackgroundColor = ConsoleColor.Yellow;
 			Console.ForegroundColor = ConsoleColor.Black;
-			Console.WriteLine("Multiple interpretations:");
+			Console.WriteLine("ambiguity> ");
 			foreach (PatternMatcher match in matches)
 			{
 				foreach (Phrase phrase in match.MatchedPhrases) {
@@ -445,26 +462,41 @@ namespace ProseLib
 		
 		static void onParseSentence(ProseRuntime runtime, PNode source)
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.Write("postparse>     ");
 			writePrettyProseWithProgressMark(runtime, source, null, 0);
 		}
 		
 		static void beforePerformingAction(ProseRuntime runtime, PNode source)
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.Write("preaction>     ");
 			writePrettyProseWithProgressMark(runtime, source, null, 1);
 		}
 		
 		static void afterPerformingAction(ProseRuntime runtime, PNode source)
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Green;
+			Console.Write("postaction>    ");
 			writePrettyProseWithProgressMark(runtime, source, null, 1);
 		}
 		
 		static void beforeReduction(ProseRuntime runtime, PNode source)
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.Write("prereduction>  ");
 			writePrettyProseWithProgressMark(runtime, source, null, 0);
 		}
 
 		static void afterReduction(ProseRuntime runtime, PNode source)
 		{
+			Console.BackgroundColor = ConsoleColor.Black;
+			Console.ForegroundColor = ConsoleColor.Gray;
+			Console.Write("postreduction> ");
 			writePrettyProseWithProgressMark(runtime, source, null, 0);
 		}
 
@@ -482,7 +514,7 @@ namespace ProseLib
 		public static void onMatch(ProseRuntime runtime, PatternMatcher match) {
 			restoreConsoleColor();
 			foreach (Phrase phrase in match.MatchedPhrases)
-				Console.WriteLine("Pattern Match> " + phrase.getReadableString());
+				Console.WriteLine("match>          " + phrase.getReadableString());
 		}
 
 		public static void onMatcherFailure(ProseRuntime runtime, PatternMatcher match) {
@@ -496,7 +528,7 @@ namespace ProseLib
 			if (str.Length != 0)
 				str.Remove(str.Length-1, 1);
 
-			Console.WriteLine("Match Fail> " + str.ToString());
+			Console.WriteLine("match fail>     " + str.ToString());
 		}
 
 		public static void setShowEvent(ProseRuntime runtime, List<ProseObject> args)

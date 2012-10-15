@@ -6,5 +6,11 @@
 
 3.	The progress mark should skip over text blocks and {} blocks.  It doesn't.
 
-4.	Phrases need to set value = null after being applied (unless they're ordinary SimplePhrases).
-	Otherwise, weird data shows up in the debugger.
+	4.	Phrases need to set value = null after being applied (unless they're ordinary SimplePhrases).
+		Otherwise, weird data shows up in the debugger.
+
+5.	Check that word creating phrases and other early written phrases aren't explicitly overwriting their delimiters.
+
+6.	Pattern matcher matching across terminal period causes the word: a, b, c. word: e, f, g. problem.
+
+7.	When parentheses are eliminated, sometimes pattern matchers retain references to them in TerminatorNode.  This causes a null reference exception when one attempts to extract the last argument from the matcher: the search never ends because it's looking for a parenthesis that isn't there.

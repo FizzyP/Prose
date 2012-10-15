@@ -1,4 +1,5 @@
 using System;
+using System.Text.RegularExpressions;
 
 namespace ProseLanguage
 {
@@ -15,7 +16,7 @@ namespace ProseLanguage
 		{
 			string readMe = literal;
 
-		    int maxLength = 30;
+		    int maxLength = 50;
 		    
 		    string stringToDisplay;
 		    if (readMe.Length < maxLength) {
@@ -24,8 +25,10 @@ namespace ProseLanguage
 			else {
 				stringToDisplay = readMe.Substring(0, maxLength-3) + "...";
 			}
+
+			string cleanedString = Regex.Replace(stringToDisplay, "\n|\r", "");
 			
-			return "\"" + stringToDisplay + "\"";
+			return "\"" + cleanedString + "\"";
 		}
 	}
 }
