@@ -45,7 +45,11 @@ namespace ProseLib
 
 		private static int breakPointDepth = 0;
 		
-		
+		//	Flags controlling behavior of REPL queued from prose
+		private static bool shouldContinue = false;
+		private static bool shouldExit = false;
+		private static bool shouldGetNewREPLRuntime = false;
+
 		
 		
 		public static void howdy()
@@ -129,25 +133,15 @@ namespace ProseLib
 			ProseREPLLoop();
 			
 		}
-		
+
+
 		public static void ProseREPLLoop()
 		{
 			while (true) {
 				printPrompt();
 				string instring = Console.ReadLine();
 				restoreConsoleColor();
-				
-				if (instring == "exit." || instring == "continue.")
-					break;
-				if (instring == "new.") {
-					restoreConsoleColor();
-					Console.WriteLine("Building new runtime.");
-					initNewREPLRuntime();
-					Console.BackgroundColor = ConsoleColor.White;
-					Console.ForegroundColor = ConsoleColor.Black;
-					Console.WriteLine("Switched to new runtime.");
-					continue;
-				}
+
 				if (instring == "clean.") {
 					restoreConsoleColor();
 					Console.WriteLine("Building new runtime.");
@@ -159,6 +153,25 @@ namespace ProseLib
 				}
 				
 				tryRead (instring);
+
+				if (shouldExit) {
+					shouldExit = false;
+					break;
+				}
+				if (shouldContinue) {
+					shouldContinue = false;
+					break;
+				}
+				if (shouldGetNewREPLRuntime) {
+					shouldGetNewREPLRuntime = false;
+					restoreConsoleColor();
+					Console.WriteLine("Building new runtime.");
+					initNewREPLRuntime();
+					Console.BackgroundColor = ConsoleColor.White;
+					Console.ForegroundColor = ConsoleColor.Black;
+					Console.WriteLine("Switched to new runtime.");
+					continue;
+				}
 			}
 		}
 		
@@ -676,6 +689,20 @@ namespace ProseLib
 		}
 
 	
+		public static void ContinueFromBreakPoint(ProseRuntime runtime, List<ProseObject> args)
+		{
+			shouldContinue = true;
+		}
+
+		public static void ExitREPL(ProseRuntime runtime, List<ProseObject> args)
+		{
+			shouldContinue = true;
+		}
+
+		public static void SwitchToNewRuntime(ProseRuntime runtime, List<ProseObject> args)
+		{
+			shouldGetNewREPLRuntime = true;
+		}
 	}
 }
 

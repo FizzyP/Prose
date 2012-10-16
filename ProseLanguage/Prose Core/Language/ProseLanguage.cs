@@ -315,6 +315,15 @@ namespace ProseLanguage
 				scope.addPhrase(applyMethodPhrase);
 			}
 
+			//	Apply a method with no arguments to produce an action
+			//	, @method[method_name] ,
+			{
+				ProseObject[] p = new ProseObject[]
+				{runtime.Comma, runtime.word("@method"), runtime.Comma};
+				Phrase applyMethodPhrase = new ApplyMethodPhrase(runtime.Word_phrase, p);
+				scope.addPhrase(applyMethodPhrase);
+			}
+
 			#endregion
 
 			//	Add a breakpoint
