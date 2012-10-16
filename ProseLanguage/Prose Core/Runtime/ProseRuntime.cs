@@ -688,26 +688,33 @@ namespace ProseLanguage
 		{
 			node = filterIncomingPNode(node);
 
-			//	Check for breakpoints
-			if (node.value is BreakPointObject)
-			{
-				BreakPointObject bp = (BreakPointObject) node.value;
-				BreakPointObject.RuntimeData rtdata = new BreakPointObject.RuntimeData();
-				
-				//	Do any action associated with the breakpoint and make the default callback if asked
-				if (bp.doBreakPoint(this, node, rtdata)) {
-					if (OnBreakPoint != null)
-						OnBreakPoint(this, node, rtdata, bp.BreakScript);
+			bool filterAgain = false;		//	Determines if we repeatedly apply this.
+
+			do {
+				if (node == null)
+					break;
+
+				//	Check for breakpoints
+				if (node.value is BreakPointObject)
+				{
+					BreakPointObject bp = (BreakPointObject) node.value;
+					BreakPointObject.RuntimeData rtdata = new BreakPointObject.RuntimeData();
+					
+					//	Do any action associated with the breakpoint and make the default callback if asked
+					if (bp.doBreakPoint(this, node, rtdata)) {
+						if (OnBreakPoint != null)
+							OnBreakPoint(this, node, rtdata, bp.BreakScript);
+					}
+					
+					//	Remove the breakpoint
+					if (node.prev != null)
+						node.prev.next = node.next;
+					if (node.next != null)
+						node.next.prev = node.prev;
+					//	Skip over the breakpoint
+					node = node.next;
 				}
-				
-				//	Remove the breakpoint
-				if (node.prev != null)
-					node.prev.next = node.next;
-				if (node.next != null)
-					node.next.prev = node.prev;
-				//	Skip over the breakpoint
-				return node.next;
-			}
+			} while (filterAgain);
 
 			return node;
 		}

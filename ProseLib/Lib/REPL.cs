@@ -116,6 +116,7 @@ namespace ProseLib
 			initNewCleanRuntime();
 			try {
 				runtime.read ("read file \"Libraries/REPL/regression.prose\"", runtime.GlobalClient);
+				runtime.read ("read file \"adventure.prose\"", runtime.GlobalClient);
 			}
 			catch (Exception e) {
 				Console.WriteLine("Automated regression test failed: " + e.Message);
@@ -579,7 +580,23 @@ namespace ProseLib
 					showParseSentenceReport = false;
 				}
 			}
-			
+
+
+			//	POSTACTION REPORTS
+			if (eventWord == "postaction") {
+				if (yesNoWord == "yes")	{
+					if (!showAfterActionReport) {
+						runtime.AfterPerformingAction += afterPerformingActionDelegate;
+						showAfterActionReport = true;
+					}
+				}
+				else {
+					runtime.AfterPerformingAction -= afterPerformingActionDelegate;
+					showAfterActionReport = false;
+				}
+			}
+
+
 			//	PREACTION REPORTS
 			if (eventWord == "preaction") {
 				if (yesNoWord == "yes")	{
@@ -593,7 +610,6 @@ namespace ProseLib
 					showBeforeActionReport = false;
 				}
 			}
-
 
 			//	PREREDUCTION REPORTS
 			if (eventWord == "prereduction") {
