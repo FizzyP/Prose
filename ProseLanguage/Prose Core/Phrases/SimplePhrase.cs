@@ -119,8 +119,8 @@ namespace ProseLanguage
 			if (prevWriteHead != null) {
 				prevWriteHead.next = match.terminatorNode;
 				//prevWriteHead.next = evaluateMe.forwardSeek(match.NumObjectsMatched);
-//				if (match.terminatorNode != null)
-//					match.terminatorNode.prev = prevWriteHead;
+				if (match.terminatorNode != null)
+					match.terminatorNode.prev = prevWriteHead;
 			}
 
 			return firstNodeInNewList;

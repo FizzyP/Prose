@@ -484,6 +484,7 @@ namespace ProseLanguage
 			PNode reducedFragment = source;
 			PNode progressMark = source;
 			didReduce = false;				//	start assuming we didn't do anything.
+			bool atBeginning = true;
 			while(true)
 			{
 				if (progressMark == null)
@@ -502,13 +503,14 @@ namespace ProseLanguage
 				didReduce = didReduce || didReduceAtMark;		//	Record if we managed to reduce anything.
 				//	Possibly this changed the beginning of the fragment we're looking at.
 				//	If so, record the change.
-				if (progressMark == reducedFragment)	//	Check for the beginning, if we're at the beginning then...
+				//if (progressMark == reducedFragment)	//	Check for the beginning, if we're at the beginning then...
+				if (atBeginning)	//	Check for the beginning, if we're at the beginning then...
 					reducedFragment = reducedAtMark;	//	...need to keep track of the moving beginning.
 				if (didReduceAtMark)
 				{
 					//	If we reduced something, then start over to see if we can match from the beginning.
 					progressMark = reducedFragment;
-
+					atBeginning = true;
 //					//	First check to see if we're moving it past an action.
 //					if (progressMark.value is ProseAction) {
 //						//	If so, return to allow the action to be performed.
@@ -518,7 +520,11 @@ namespace ProseLanguage
 				else {
 					//	We didn't reduce anything, so move the progress mark forward.
 
-					progressMark = progressMark.next;
+					{
+						progressMark = progressMark.next;
+						atBeginning = false;
+					}
+
 					//	If we run into a sentence ending symbol like this, then we're finished.
 					if (progressMark == null || symbolEndsSentence(progressMark))
 					{
@@ -611,22 +617,28 @@ namespace ProseLanguage
 			//	As long as there are still active matchers...
 			while(activeMatchers.Count != 0 && sourceNode != null)
 			{
+				sourceNode = debugFilterIncomingPNode(sourceNode);
+				if (sourceNode == null)
+					break;
+
 				//	If we run into left parenthesis, reduce and eliminate before continuing.
-				if (sourceNode.value == LeftParenthesis)
+				while (sourceNode.value == LeftParenthesis)
 				{
 					PNode leftParen = sourceNode;
 					//	Reduce the parenthetical
 					bool didReduce;
-					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce, RightParenthesis);
+					sourceNode = reduceParentheticalExpression(sourceNode, out didReduce, LeftParenthesis, RightParenthesis);
 					//	Some matchers may have retained a reference to the leftParen, so swap it for whatever is there now.
 					foreach (PatternMatcher matcher in activeMatchers) {
 						if (matcher.terminatorNode == leftParen)
 							matcher.terminatorNode = sourceNode;
 					}
+				
+					//	Refilter the source node
+					sourceNode = debugFilterIncomingPNode(sourceNode);
+					if (sourceNode == null)
+						break;
 				}
-				sourceNode = debugFilterIncomingPNode(sourceNode);
-				if (sourceNode == null)
-					break;
 
 
 				//	Try to extend all of the active matchers.
@@ -711,6 +723,9 @@ namespace ProseLanguage
 						node.prev.next = node.next;
 					if (node.next != null)
 						node.next.prev = node.prev;
+
+					filterAgain = true;
+
 					//	Skip over the breakpoint
 					node = node.next;
 				}
@@ -743,10 +758,23 @@ namespace ProseLanguage
 
 
 		
-		private PNode reduceParentheticalExpression(PNode source, out bool didReduce, ProseObject rightParentheticalObject)
+		private PNode reduceParentheticalExpression(PNode source, out bool didReduce, ProseObject leftParentheticalObject, ProseObject rightParentheticalObject)
 		{
 			//	Find the ending parenthesis
 			PNode rightParen = source;
+
+			for (int parenDepthCount = 0; true; rightParen = rightParen.next) {
+				if (rightParen.value == leftParentheticalObject) {
+					parenDepthCount++;
+					continue;
+				}
+				if (rightParen.value == rightParentheticalObject) {
+					parenDepthCount--;
+					if (parenDepthCount == 0)		//	We've found the closing right parenthesis
+						break;
+				}
+			}
+
 			while (rightParen.value != rightParentheticalObject) {
 				rightParen= rightParen.next;
 			}
@@ -778,7 +806,8 @@ namespace ProseLanguage
 			else {
 				//	If we get something back, splice it in
 				//	Cut out the left paren
-				source.prev.next = reducedExpression;
+				if (source.prev != null)
+					source.prev.next = reducedExpression;
 				reducedExpression.prev = source.prev;
 				
 				//	Hook the end of the expression back into the original source (skipping right paren)
@@ -786,7 +815,8 @@ namespace ProseLanguage
 				PNode reducedExprEnd = reducedExpression;
 				while (reducedExprEnd.next != null)	reducedExprEnd = reducedExprEnd.next;
 				reducedExprEnd.next = rightParen.next;
-				rightParen.next.prev = reducedExprEnd;
+				if (rightParen.next != null)
+					rightParen.next.prev = reducedExprEnd;
 			}
 			
 			didReduce = didReduceParenthetical;
@@ -815,7 +845,7 @@ namespace ProseLanguage
 				if (obj == LeftSquareBracket)
 				{
 					bool didReduce;
-					node = reduceParentheticalExpression(node, out didReduce, RightSquareBracket);
+					node = reduceParentheticalExpression(node, out didReduce, LeftSquareBracket, RightSquareBracket);
 					obj = node.value;
 				}
 
@@ -825,12 +855,15 @@ namespace ProseLanguage
 					thisObjSpaceRequest = -1;
 				}
 				else {
+					if (prevObjSpaceRequest != -1)
+						str.Append(" ");
+
 					str.Append(obj.getReadableString());
 					thisObjSpaceRequest = 1;
 				}
 
-				if (prevObjSpaceRequest != -1 && thisObjSpaceRequest != -1)
-					str.Append(" ");
+//				if (prevObjSpaceRequest != -1 && thisObjSpaceRequest != -1)
+//					str.Append(" ");
 
 				//	Update
 				prevObjSpaceRequest = thisObjSpaceRequest;
